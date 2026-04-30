@@ -1,2 +1,25 @@
+# Build artifacts
+debug/
+lib/
+*.o
+*.so
+*.a
+
+# Binaries
+buse
+
+# Logs
+log.txt
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+compile_commands.json
+
+# Claude settings
+.claude/settings.local.json
+
 # Documentation
 docs/
