@@ -1,0 +1,445 @@
+================================================================================
+                    LDS (LOCAL DRIVE STORAGE) PROJECT
+                   COMPLETE IMPLEMENTATION GUIDE
+================================================================================
+
+PROJECT STATUS: Ready to implement
+ESTIMATED TIME: 8 weeks (~194 hours)
+DIFFICULTY: Intermediate to Advanced
+TARGET: IoT-based NAS/RAID01 system with fault tolerance
+
+================================================================================
+STEP 1: UNDERSTAND THE SYSTEM (Today - 2-3 hours)
+================================================================================
+
+READ THESE DOCUMENTS IN THIS ORDER:
+
+1. START_HERE.md (10 min)
+   └─ Quick overview and how to use all documents
+   └─ File: /home/daniel/git/projects/lds/START_HERE.md
+
+2. PROJECT_BOOK.html (2-3 hours)
+   └─ Complete learning resource
+   └─ Read sections:
+      - Introduction & Project Overview
+      - What is LDS?
+      - System Architecture
+      - Master-Minion Model
+      - RAID01 Explained
+      - Command Processing Framework (CPF)
+      - Core Components
+   └─ File: Open in browser (firefox PROJECT_BOOK.html)
+   └─ Contains 2,806 lines with diagrams, code examples, APIs
+
+3. IMPLEMENTATION_ROADMAP.md (Skim)
+   └─ High-level plan for all 6 phases
+   └─ Reference while coding
+   └─ File: /home/daniel/git/projects/lds/IMPLEMENTATION_ROADMAP.md
+
+================================================================================
+STEP 2: SET UP YOUR WORKSPACE (1-2 hours)
+================================================================================
+
+CREATE DIRECTORY STRUCTURE:
+
+  mkdir -p services/mediator/{include,src}
+  mkdir -p services/commands/{include,src}
+  mkdir -p services/network/{include,src}
+  mkdir -p services/storage/{include,src}
+  mkdir -p services/execution/{include,src}
+  mkdir -p services/health/{include,src}
+  mkdir -p services/discovery/{include,src}
+  mkdir -p minion/{include,src}
+  mkdir -p test/{unit,integration}
+
+REVIEW EXISTING CODE:
+
+  app/LDS.cpp
+  ├─ Main entry point
+  └─ Shows how Reactor + NBD + Storage work
+
+  design_patterns/reactor/
+  ├─ Event-driven I/O using epoll
+  └─ Already implemented ✓
+
+  design_patterns/command/
+  ├─ ICommand interface
+  └─ Already implemented ✓
+
+  design_patterns/factory/
+  ├─ Generic object creation
+  └─ Already implemented ✓
+
+  utilities/threading/thread_pool/
+  ├─ Worker threads with priority queue
+  └─ Already implemented ✓
+
+  plugins/
+  ├─ Plugin system (PNP)
+  └─ Already implemented ✓
+
+================================================================================
+STEP 3: START IMPLEMENTING (Weeks 1-8)
+================================================================================
+
+PHASE 1: CORE FRAMEWORK INTEGRATION (Weeks 1-2)
+─────────────────────────────────────────────────
+Effort: 18 hours | Status: NOT STARTED
+
+Task 1.1: InputMediator (4 hours)
+  └─ Converts NBD events to ICommand objects
+  └─ Files: services/mediator/{hpp,cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 1.1"
+
+Task 1.2: ReadCommand (6 hours)
+  └─ Implements READ operations
+  └─ Files: services/commands/{ReadCommand.hpp,ReadCommand.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 1.2"
+
+Task 1.3: WriteCommand (6 hours)
+  └─ Implements WRITE operations with RAID01
+  └─ Files: services/commands/{WriteCommand.hpp,WriteCommand.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 1.3"
+
+Task 1.4: Register Commands (2 hours)
+  └─ Wire commands to Factory
+  └─ Checklist: TASK_CHECKLIST.md "Task 1.4"
+
+→ Milestone 1: Components wire together ✓
+
+
+PHASE 2: DATA MANAGEMENT (Weeks 2-3)
+─────────────────────────────────────
+Effort: 46 hours | Status: NOT STARTED
+
+Task 2.1: RAID01 Manager (12 hours)
+  └─ Manages block-to-minion mapping
+  └─ Handles failures and recovery
+  └─ Files: services/storage/{RAID01Manager.hpp,RAID01Manager.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 2.1"
+
+Task 2.2: MinionProxy (14 hours)
+  └─ Network communication with minions
+  └─ UDP message serialization
+  └─ Files: services/network/{MinionProxy.hpp,MinionProxy.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 2.2"
+
+Task 2.3: ResponseManager (10 hours)
+  └─ Listens for async responses from minions
+  └─ Background UDP receiver thread
+  └─ Files: services/network/{ResponseManager.hpp,ResponseManager.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 2.3"
+
+Task 2.4: Scheduler (10 hours)
+  └─ Handles timeouts and retries
+  └─ Exponential backoff logic
+  └─ Files: services/execution/{Scheduler.hpp,Scheduler.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 2.4"
+
+→ Milestone 2: Network communication works ✓
+
+
+PHASE 3: RELIABILITY FEATURES (Weeks 3-4)
+──────────────────────────────────────────
+Effort: 24 hours | Status: NOT STARTED
+
+Task 3.1: Watchdog (8 hours)
+  └─ Monitors minion health
+  └─ Detects failures (15-second threshold)
+  └─ Files: services/health/{Watchdog.hpp,Watchdog.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 3.1"
+
+Task 3.2: Auto-Discovery (10 hours)
+  └─ Dynamic minion discovery
+  └─ Data rebalancing on minion join/rejoin
+  └─ Files: services/discovery/{AutoDiscovery.hpp,AutoDiscovery.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 3.2"
+
+Task 3.3: Error Handling & Logging (6 hours)
+  └─ Comprehensive error recovery
+  └─ Extensive logging for debugging
+  └─ Checklist: TASK_CHECKLIST.md "Task 3.3"
+
+→ Milestone 3: Fault tolerance working ✓
+
+
+PHASE 4: MINION-SIDE IMPLEMENTATION (Week 4)
+─────────────────────────────────────────────
+Effort: 12 hours | Status: NOT STARTED
+
+Task 4.1: Minion Server (12 hours)
+  └─ UDP server on each Raspberry Pi
+  └─ Handles GET_BLOCK, PUT_BLOCK, DELETE_BLOCK
+  └─ Local persistent storage
+  └─ Files: minion/{MinionServer.hpp,minion_main.cpp}
+  └─ Checklist: TASK_CHECKLIST.md "Task 4.1"
+
+→ Milestone 4: Minion side working ✓
+
+
+PHASE 5: INTEGRATION & TESTING (Week 5)
+───────────────────────────────────────
+Effort: 68 hours | Status: NOT STARTED
+
+Task 5.1: End-to-End Integration (16 hours)
+  └─ Wire all components together
+  └─ Test READ/WRITE/failures
+  └─ Checklist: TASK_CHECKLIST.md "Task 5.1"
+
+Task 5.2: Unit Tests (20 hours)
+  └─ gtest test suites for each component
+  └─ Target: >80% code coverage
+  └─ Checklist: TASK_CHECKLIST.md "Task 5.2"
+
+Task 5.3: Integration Tests (20 hours)
+  └─ Test workflows (READ, WRITE, failures, recovery)
+  └─ Checklist: TASK_CHECKLIST.md "Task 5.3"
+
+Task 5.4: System Tests (12 hours)
+  └─ Real hardware testing (Raspberry Pis)
+  └─ Performance and stress testing
+  └─ Checklist: TASK_CHECKLIST.md "Task 5.4"
+
+→ Milestone 5: Full system working ✓
+
+
+PHASE 6: OPTIMIZATION & POLISH (Week 6)
+────────────────────────────────────────
+Effort: 26 hours | Status: NOT STARTED
+
+Task 6.1: Performance Optimization (10 hours)
+  └─ Profile and optimize hot paths
+  └─ Tune parameters
+
+Task 6.2: Documentation (8 hours)
+  └─ Code documentation
+  └─ Deployment guide
+  └─ Troubleshooting guide
+
+Task 6.3: CI/CD & Build (8 hours)
+  └─ CMake build system
+  └─ Automated testing pipeline
+  └─ Docker containers
+
+→ Milestone 6: Production ready ✓
+
+================================================================================
+STEP 4: TRACK YOUR PROGRESS
+================================================================================
+
+USE THESE TOOLS:
+
+1. TASK_CHECKLIST.md
+   └─ Check off items as you complete them
+   └─ Shows estimated hours per task
+   └─ Full list of success criteria
+
+2. Create PROGRESS.md in your repo
+   └─ Daily updates on what you completed
+   └─ Notes on blockers or issues
+   └─ Track actual vs estimated time
+
+3. Git commits
+   └─ Commit after each task: git commit -m "Completed Task 1.1"
+   └─ Commit after tests pass
+   └─ Keep history clean
+
+EXAMPLE PROGRESS FILE:
+─────────────────────
+# LDS Implementation Progress
+
+## Week 1
+- [x] Task 1.1: InputMediator (4/4 hours) ✓ Completed
+- [ ] Task 1.2: ReadCommand (0/6 hours) - Started, 2 hours done
+- [ ] Task 1.3: WriteCommand (0/6 hours)
+- [ ] Task 1.4: Register with Factory (0/2 hours)
+
+## Blockers
+- Need RAID01Manager for ReadCommand (will implement in Phase 2)
+
+## Lessons Learned
+- Testing first makes implementation faster
+- Use FakeMinion for early testing
+
+================================================================================
+STEP 5: WHEN YOU GET STUCK
+================================================================================
+
+PROBLEM: Don't understand the architecture
+SOLUTION:
+  1. Read PROJECT_BOOK.html (search for topic)
+  2. Look at IMPLEMENTATION_ROADMAP.md (more details)
+  3. Review existing code (pattern examples)
+
+PROBLEM: Don't know what to code
+SOLUTION:
+  1. Open TASK_CHECKLIST.md
+  2. Find your current task
+  3. Follow step-by-step "What to do"
+
+PROBLEM: Tests failing
+SOLUTION:
+  1. Write minimal test case to isolate issue
+  2. Check PROJECT_BOOK.html for API details
+  3. Review existing tests for patterns
+  4. Ask for code review if stuck > 2 hours
+
+PROBLEM: Performance issues
+SOLUTION:
+  1. Profile with gprof or perf
+  2. Find hot path
+  3. Optimize that specific part
+  4. Measure improvement
+
+================================================================================
+EXPECTED TIMELINE
+================================================================================
+
+Week 1-2: Phase 1 (Core Framework)
+  └─ InputMediator, Commands, Factory wiring
+  └─ ~18 hours work
+  └─ Milestone 1: Components wire together
+
+Week 2-3: Phase 2 (Data Management)
+  └─ RAID01, Network, Scheduler
+  └─ ~46 hours work (longest phase!)
+  └─ Milestone 2: Network communication works
+
+Week 3-4: Phase 3 (Reliability)
+  └─ Watchdog, Auto-Discovery
+  └─ ~24 hours work
+  └─ Milestone 3: Fault tolerance working
+
+Week 4: Phase 4 (Minion Server)
+  └─ UDP server on minions
+  └─ ~12 hours work
+  └─ Milestone 4: Minion side working
+
+Week 5: Phase 5 (Integration & Testing)
+  └─ Put it all together, comprehensive testing
+  └─ ~68 hours work (lots of testing!)
+  └─ Milestone 5: Full system working
+
+Week 6: Phase 6 (Polish)
+  └─ Optimization, docs, CI/CD
+  └─ ~26 hours work
+  └─ Milestone 6: Production ready
+
+TOTAL: ~8 weeks at ~5 hours/day (or ~25 hours/week)
+
+================================================================================
+SUCCESS CRITERIA
+================================================================================
+
+When you're done, you'll have:
+
+✓ Fully functional IoT-based NAS system
+✓ RAID01 fault tolerance (survives 1 minion death)
+✓ Automatic failover to replicas
+✓ Automatic minion discovery & recovery
+✓ Comprehensive test coverage (>80%)
+✓ Production-ready code
+✓ Complete documentation
+✓ Working examples and plugins
+
+You'll be able to:
+
+✓ Mount LDS as Linux filesystem
+✓ Read/write files like normal storage
+✓ Transparently handle minion failures
+✓ Scale to 10+ minions
+✓ Store 1TB+ of data
+✓ Know exactly what's happening (extensive logging)
+
+================================================================================
+KEY DOCUMENTS
+================================================================================
+
+1. START_HERE.md (456 lines)
+   └─ Quick start guide
+   └─ How to use all documents
+   └─ FAQ
+
+2. PROJECT_BOOK.html (2,806 lines)
+   └─ Complete learning resource
+   └─ Architecture, concepts, diagrams, code examples
+   └─ API specifications, testing strategies
+   └─ Open in browser
+
+3. IMPLEMENTATION_ROADMAP.md (773 lines)
+   └─ Detailed phase-by-phase plan
+   └─ Task descriptions and code sketches
+   └─ Dependencies and milestones
+
+4. TASK_CHECKLIST.md (523 lines)
+   └─ Granular checklist of every task
+   └─ Estimated effort per task
+   └─ Success criteria for each
+
+5. COMPLETE_GUIDE.txt (This file)
+   └─ Comprehensive reference
+   └─ Everything tied together
+   └─ Quick lookup
+
+================================================================================
+NEXT STEPS - DO THIS NOW
+================================================================================
+
+RIGHT NOW:
+1. Open START_HERE.md and read it (10 min)
+2. Open PROJECT_BOOK.html and skim "Architecture" section (30 min)
+3. Create your progress tracking file
+
+TOMORROW:
+1. Read PROJECT_BOOK.html thoroughly (2-3 hours)
+   └─ Understand the system completely
+2. Review existing code in design_patterns/
+3. Then start Task 1.1: InputMediator
+
+THIS WEEK:
+1. Complete Phase 1 (4 tasks, 18 hours)
+2. Get Milestone 1 working
+3. Review your code and write tests
+
+THIS MONTH:
+1. Complete Phase 2 (RAID01 + Network)
+2. Get your first READ/WRITE working end-to-end
+3. Test failure scenarios
+
+================================================================================
+CONTACT & HELP
+================================================================================
+
+Stuck? Confused? Check these in order:
+
+1. PROJECT_BOOK.html - Search for concept
+2. IMPLEMENTATION_ROADMAP.md - Search for task
+3. TASK_CHECKLIST.md - Find step-by-step instructions
+4. Existing code - See implementation patterns
+5. Ask for code review if stuck > 2 hours
+
+Remember: Every good programmer gets stuck. Getting unstuck is a skill.
+
+================================================================================
+FINAL THOUGHTS
+================================================================================
+
+This is a real, production-grade system. By completing it, you'll have learned:
+
+✓ Advanced C++ patterns (Reactor, Factory, Command)
+✓ Concurrent programming (threads, mutexes, condition variables)
+✓ Network programming (UDP, serialization, protocols)
+✓ System design (distributed systems, fault tolerance, RAID)
+✓ Software engineering (testing, documentation, design patterns)
+
+This is valuable, professional experience. The skills transfer to any large system.
+
+You've got this! 🚀
+
+================================================================================
+Last Updated: 2026-04-30
+Status: READY TO START
+Estimated Duration: 8 weeks
+Difficulty: Intermediate to Advanced
+Good Luck!
+================================================================================
