@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(chmod +x /home/daniel/git/projects/lds/test/test_readwrite.sh /home/daniel/git/projects/lds/test/test_signals.sh)",
+      "Bash(code --list-extensions)",
+      "Bash(code --disable-extension ms-vscode.cpptools)"
+    ]
+  }
+}
