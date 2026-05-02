@@ -32,7 +32,7 @@ public:
   ~NBDDriverComm() override;
 
   std::shared_ptr<DriverData> ReceiveRequest() override;       // DriverError
-  void SendReplay(std::shared_ptr<DriverData> data_) override; // DriverError
+  void SendReply(std::shared_ptr<DriverData> data_) override; // DriverError
   void Disconnect() override;                                  // DriverError
 
   int GetFD() override;

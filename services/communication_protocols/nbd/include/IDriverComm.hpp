@@ -26,7 +26,7 @@ public:
 
   virtual std::shared_ptr<DriverData> ReceiveRequest() = 0;
   virtual void
-  SendReplay(std::shared_ptr<DriverData> data_) = 0; // throw IOExcepton
+  SendReply(std::shared_ptr<DriverData> data_) = 0; // throw IOExcepton
   virtual void Disconnect() = 0;
   virtual int GetFD() = 0; // epoll use only
 };

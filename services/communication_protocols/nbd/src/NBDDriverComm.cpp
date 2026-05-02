@@ -207,9 +207,9 @@ std::shared_ptr<DriverData> NBDDriverComm::ReceiveRequest()
   return ret;
 }
 
-// -------------------- SendReplay ----------------------
+// -------------------- SendReply ----------------------
 
-void NBDDriverComm::SendReplay(std::shared_ptr<DriverData> data_)
+void NBDDriverComm::SendReply(std::shared_ptr<DriverData> data_)
 {
   struct nbd_reply reply;
   reply.magic = htonl(NBD_REPLY_MAGIC);
