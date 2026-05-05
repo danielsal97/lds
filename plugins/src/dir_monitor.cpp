@@ -1,8 +1,5 @@
 #include "dir_monitor.hpp"
-#include "InotifyEvent.h"
-#include "InotifyEventHandler.h"
-#include "InotifyManager.h"
-#include "InotifyWatch.h"
+#include "inotify.hpp"
 #include "singelton.hpp"
 
 namespace hrd41
@@ -15,7 +12,7 @@ private:
 
 public:
   DirMonitorHandler(DirMonitor* monitor) : m_monitor(monitor) {}
-
+  
   bool handle(InotifyEvent& e) override
   {
     std::string filename = e.getName();

@@ -40,7 +40,6 @@ void HandleRequest(NBDDriverComm& driver, LocalStorage& storage, Reactor& reacto
 
   case DriverData::DISCONNECT:
     std::cout << "BUSE: disconnect received" << std::endl;
-    reactor.Stop();
     break;
   }
 }
