@@ -3,46 +3,10 @@
 
 #include "LocalStorage.hpp"
 #include "NBDDriverComm.hpp"
+#include "InputMediator.hpp"
 #include "reactor.hpp"
 
 using namespace hrd41;
-
-void HandleRequest(NBDDriverComm& driver, LocalStorage& storage, Reactor& reactor) {
-  auto request = driver.ReceiveRequest();
-
-  std::cout << "Got request: type=" << request->m_type
-            << " offset=" << request->m_offset
-            << " len=" << request->m_buffer.size() << std::endl;
-
-  switch (request->m_type)
-  {
-  case DriverData::READ:
-    std::cout << "READ" << std::endl;
-    storage.Read(request);
-    driver.SendReplay(request);
-    break;
-
-  case DriverData::WRITE:
-    std::cout << "WRITE" << std::endl;
-    storage.Write(request);
-    driver.SendReplay(request);
-    break;
-
-  case DriverData::FLUSH:
-    request->m_status = DriverData::SUCCESS;
-    driver.SendReplay(request);
-    break;
-
-  case DriverData::TRIM:
-    request->m_status = DriverData::SUCCESS;
-    driver.SendReplay(request);
-    break;
-
-  case DriverData::DISCONNECT:
-    std::cout << "BUSE: disconnect received" << std::endl;
-    break;
-  }
-}
 
 int main(int argc, char* argv[])
 {
@@ -61,16 +25,14 @@ int main(int argc, char* argv[])
   {
     LocalStorage storage(size);
     NBDDriverComm driver(device, size);
+    InputMediator mediator(&driver, &storage);
     Reactor reactor;
 
     std::cout << "BUSE: serving " << size << " bytes on " << device
               << std::endl;
 
     reactor.Add(driver.GetFD());
-    reactor.SetHandler([&]([[maybe_unused]] int fd) {
-      std::cout << "Waiting for request..." << std::endl;
-      HandleRequest(driver, storage, reactor);
-    });
+    reactor.SetHandler([&](int fd) { mediator.Notify(fd); });
     reactor.Run();
   }
   catch (const std::exception& e)

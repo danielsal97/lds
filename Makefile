@@ -10,6 +10,7 @@ FLAGS  := -Wall -Wextra -std=c++20 -pedantic-errors -Iinclude -I../external -Iex
 	-Iplugins/include \
 	-Iservices/communication_protocols/nbd/include \
 	-Iservices/local_storage/include \
+	-Iservices/mediator/include \
 	-Iutilities/logger/include \
 	-Iutilities/threading/thread_pool/include \
 	-Iutilities/thread_safe_data_structures/priority_queue/include
@@ -57,7 +58,8 @@ TEST_BINARIES := \
 	$(BIN_DIR)/test_pnp_main \
 	$(BIN_DIR)/test_logger \
 	$(BIN_DIR)/test_thread_pool \
-	$(BIN_DIR)/test_wpq
+	$(BIN_DIR)/test_wpq \
+	$(BIN_DIR)/test_input_mediator
 APP_BINARIES := $(patsubst $(APP_DIR)/%.cpp,$(BIN_DIR)/%,$(APP_CPP))
 
 # =========================
