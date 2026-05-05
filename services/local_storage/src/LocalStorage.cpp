@@ -11,7 +11,8 @@ LocalStorage::LocalStorage(size_t size_) : IStorage(size_), m_storage(std::vecto
 
 void LocalStorage::Read(std::shared_ptr<DriverData> data_)
 {
-    
+    std::lock_guard<std::mutex> lock(m_lock);
+
     if (data_->m_offset + data_->m_buffer.size() > m_storage.size())
     {
         throw std::out_of_range("Read exceeds storage bounds");
@@ -24,7 +25,9 @@ void LocalStorage::Read(std::shared_ptr<DriverData> data_)
 
 void LocalStorage::Write(std::shared_ptr<DriverData> data_)
 {
-    if (data_->m_offset> m_storage.size())
+    std::lock_guard<std::mutex> lock(m_lock);
+
+    if (data_->m_offset + data_->m_buffer.size() > m_storage.size())
     {
         throw std::out_of_range("Write exceeds storage bounds");
     }
@@ -32,5 +35,6 @@ void LocalStorage::Write(std::shared_ptr<DriverData> data_)
     std::copy(data_->m_buffer.begin(),
               data_->m_buffer.begin() + data_->m_buffer.size(),
               m_storage.begin() + data_->m_offset);
+}
 
-}} // namespace hrd41
+} // namespace hrd41

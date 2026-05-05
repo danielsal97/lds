@@ -11,6 +11,7 @@
 #define __ILRD_LOCAL_STORAGE__
 
 #include <memory> // shared_ptr
+#include <mutex>
 
 #include "IStorage.hpp"
 #include "DriverData.hpp"
@@ -24,12 +25,13 @@ public:
     LocalStorage(const LocalStorage& o_) = delete;
     LocalStorage& operator=(const LocalStorage& o_) = delete;
     ~LocalStorage() = default;
-    
+
     void Read(std::shared_ptr<DriverData> data_) override;  //throw StorageError
     void Write(std::shared_ptr<DriverData> data_) override;  //throw StorageError
 
 private:
-    std::vector<char> m_storage; 
+    std::vector<char> m_storage;
+    mutable std::mutex m_lock; 
 };
     
 class LocalStorageError : public StorageError
