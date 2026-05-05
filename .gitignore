@@ -1,12 +1,15 @@
 # Build artifacts
+build/
 debug/
 lib/
+bin/
 *.o
 *.so
 *.a
 
 # Binaries
 buse
+lds_app
 
 # Logs
 log.txt
@@ -16,6 +19,8 @@ log.txt
 
 # IDE
 .vscode/
+.obsidian/
+.cache/
 compile_commands.json
 
 # Claude settings

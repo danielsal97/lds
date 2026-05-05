@@ -1,7 +1,7 @@
 CXX := g++
 CC  := gcc
 
-FLAGS  := -Wall -Wextra -std=c++20 -pedantic-errors -Iinclude -I../utils -Ithird_party/Inotify_cpp -Ithird_party/Inotify_cpp/inotify \
+FLAGS  := -Wall -Wextra -std=c++20 -pedantic-errors -Iinclude -I../external -Iexternal/Inotify_cpp -Iexternal/Inotify_cpp/inotify \
 	-Idesign_patterns/command/include \
 	-Idesign_patterns/observer/include \
 	-Idesign_patterns/factory/include \
@@ -22,7 +22,7 @@ APP_DIR := app
 DEBUG_DIR := debug
 LIB_DIR := lib
 BIN_DIR := bin
-UTILS_DIR := utils
+UTILS_DIR := external
 THIRD_PARTY_DIR := third_party/*
 
 LIBRARY_NAME := foo
@@ -31,7 +31,7 @@ LIBRARY_DEBUG := $(LIB_DIR)/lib$(LIBRARY_NAME)-debug.so
 # Find all C++ source files from components (*/src/*.cpp recursively)
 SRC_CPP := $(shell find design_patterns utilities services plugins -path "*/src/*.cpp" -type f 2>/dev/null) $(wildcard $(SRC_DIR)/*.cpp)
 UTILS_C := $(wildcard $(UTILS_DIR)/*.c)
-THIRD_PARTY_CPP := $(wildcard $(THIRD_PARTY_DIR)/*.cpp) $(wildcard third_party/Inotify_cpp/inotify/*.cpp)
+THIRD_PARTY_CPP := $(wildcard $(THIRD_PARTY_DIR)/*.cpp) $(wildcard external/Inotify_cpp/inotify/*.cpp)
 TEST_CPP := $(shell find test/unit -name "*.cpp" -type f) $(wildcard $(TEST_DIR)/*.cpp)
 APP_CPP := $(wildcard $(APP_DIR)/*.cpp)
 
@@ -43,8 +43,8 @@ DEBUG_OBJECTS := \
 	$(patsubst plugins/%.cpp,$(DEBUG_DIR)/%.o,$(filter plugins/%,$(SRC_CPP))) \
 	$(patsubst $(SRC_DIR)/%.cpp,$(DEBUG_DIR)/%.o,$(filter $(SRC_DIR)/%.cpp,$(SRC_CPP))) \
 	$(patsubst $(UTILS_DIR)/%.c,$(DEBUG_DIR)/%.o,$(UTILS_C)) \
-	$(patsubst third_party/Inotify_cpp/inotify/%.cpp,$(DEBUG_DIR)/inotify_%.o,$(filter third_party/Inotify_cpp/inotify/%.cpp,$(THIRD_PARTY_CPP))) \
-	$(patsubst $(THIRD_PARTY_DIR)/%.cpp,$(DEBUG_DIR)/third_party_%.o,$(filter-out third_party/Inotify_cpp/inotify/%.cpp,$(THIRD_PARTY_CPP)))
+	$(patsubst external/Inotify_cpp/inotify/%.cpp,$(DEBUG_DIR)/inotify_%.o,$(filter external/Inotify_cpp/inotify/%.cpp,$(THIRD_PARTY_CPP))) \
+	$(patsubst $(THIRD_PARTY_DIR)/%.cpp,$(DEBUG_DIR)/third_party_%.o,$(filter-out external/Inotify_cpp/inotify/%.cpp,$(THIRD_PARTY_CPP)))
 
 # Explicit test binaries from test/unit/
 TEST_BINARIES := \
@@ -93,7 +93,7 @@ $(DEBUG_DIR)/%.o: $(UTILS_DIR)/%.c
 # =========================
 # Compile inotify
 # =========================
-$(DEBUG_DIR)/inotify_%.o: third_party/Inotify_cpp/inotify/%.cpp
+$(DEBUG_DIR)/inotify_%.o: external/Inotify_cpp/inotify/%.cpp
 	@mkdir -p $(DEBUG_DIR)
 	$(CXX) -c $(FLAGS) $(DFLAGS) $(PIC_FLAG) $< -o $@
 

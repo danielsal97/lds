@@ -21,7 +21,7 @@ namespace hrd41 {
 
 class Reactor {
 public:
-  explicit Reactor();
+  explicit Reactor(); 
   ~Reactor();
 
   Reactor(const Reactor&) = delete;
@@ -31,13 +31,11 @@ public:
   void Remove(int fd);
   void SetHandler(std::function<void(int)> handler);
   void Run();
-  void Stop();
 
 private:
-  int epoll_fd;
-  int signal_fd;
-  std::atomic<bool> running;
-  std::function<void(int)> io_handler;
+  int m_epoll_fd;
+  int m_signal_fd;
+  std::function<void(int)> m_io_handler;
   static constexpr int MAX_EVENTS = 10;
 
   void SetupSignals();
