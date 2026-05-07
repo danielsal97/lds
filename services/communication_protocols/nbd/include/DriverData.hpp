@@ -23,7 +23,8 @@ struct DriverData
     WRITE,
     DISCONNECT,
     FLUSH,
-    TRIM
+    TRIM,
+    GET_SIZE
   };
   enum StatusType
   {

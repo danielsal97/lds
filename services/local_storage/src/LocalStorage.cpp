@@ -35,6 +35,19 @@ void LocalStorage::Write(std::shared_ptr<DriverData> data_)
     std::copy(data_->m_buffer.begin(),
               data_->m_buffer.begin() + data_->m_buffer.size(),
               m_storage.begin() + data_->m_offset);
+
+    m_offset_sizes[data_->m_offset] = data_->m_buffer.size();
+}
+
+size_t LocalStorage::GetDataSize(size_t offset_) const
+{
+    std::lock_guard<std::mutex> lock(m_lock);
+    auto it = m_offset_sizes.find(offset_);
+    if (it != m_offset_sizes.end())
+    {
+        return it->second;
+    }
+    return 0;
 }
 
 } // namespace hrd41

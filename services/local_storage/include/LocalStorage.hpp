@@ -12,6 +12,7 @@
 
 #include <memory> // shared_ptr
 #include <mutex>
+#include <map>
 
 #include "IStorage.hpp"
 #include "DriverData.hpp"
@@ -28,10 +29,12 @@ public:
 
     void Read(std::shared_ptr<DriverData> data_) override;  //throw StorageError
     void Write(std::shared_ptr<DriverData> data_) override;  //throw StorageError
+    size_t GetDataSize(size_t offset_) const;
 
 private:
     std::vector<char> m_storage;
-    mutable std::mutex m_lock; 
+    mutable std::mutex m_lock;
+    std::map<size_t, size_t> m_offset_sizes;
 };
     
 class LocalStorageError : public StorageError

@@ -37,6 +37,12 @@ void InputMediator::SetupHandlers()
     m_handlers[DriverData::DISCONNECT] = [this](std::shared_ptr<DriverData> request) {
         (void)request;
     };
+
+    m_handlers[DriverData::GET_SIZE] = [this](std::shared_ptr<DriverData> request) {
+        request->m_len = m_storage->GetDataSize(request->m_offset);
+        request->m_status = DriverData::SUCCESS;
+        m_driver->SendReplay(request);
+    };
 }
 
 void InputMediator::Notify(int fd)

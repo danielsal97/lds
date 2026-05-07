@@ -13,6 +13,8 @@ lds_app
 
 # Logs
 log.txt
+*.log
+test_*.log
 
 # macOS
 .DS_Store

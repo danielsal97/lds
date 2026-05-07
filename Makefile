@@ -2,13 +2,16 @@ CXX := g++
 CC  := gcc
 
 FLAGS  := -Wall -Wextra -std=c++20 -pedantic-errors -Iinclude -I../external -Iexternal/Inotify_cpp -Iexternal/Inotify_cpp/inotify \
+	-Iinterfaces \
 	-Idesign_patterns/command/include \
 	-Idesign_patterns/observer/include \
 	-Idesign_patterns/factory/include \
 	-Idesign_patterns/singleton/include \
 	-Idesign_patterns/reactor/include \
 	-Iplugins/include \
+	-Iservices/communication_protocols \
 	-Iservices/communication_protocols/nbd/include \
+	-Iservices/communication_protocols/tcp/include \
 	-Iservices/local_storage/include \
 	-Iservices/mediator/include \
 	-Iutilities/logger/include \
@@ -59,7 +62,8 @@ TEST_BINARIES := \
 	$(BIN_DIR)/test_logger \
 	$(BIN_DIR)/test_thread_pool \
 	$(BIN_DIR)/test_wpq \
-	$(BIN_DIR)/test_input_mediator
+	$(BIN_DIR)/test_input_mediator \
+	$(BIN_DIR)/test_tcp_driver
 APP_BINARIES := $(patsubst $(APP_DIR)/%.cpp,$(BIN_DIR)/%,$(APP_CPP))
 
 # =========================
