@@ -7,7 +7,6 @@
 //        file descriptor, extracts request from driver, looks up handler,
 //        executes (calls RAID Manager, sends response)
 // ============================================================================
-
 #ifndef __ILRD_INPUT_MEDIATOR_HPP__
 #define __ILRD_INPUT_MEDIATOR_HPP__
 
@@ -17,17 +16,21 @@
 
 #include "IMediator.hpp"
 
+#include "IDriverComm.hpp"
+#include "IStorage.hpp"
+#include "thread_pool.hpp"
+
 namespace hrd41
 {
 
-class IDriverComm;
-class IStorage;
+
 struct DriverData;
 
 class InputMediator : public IMediator
 {
 public:
-  explicit InputMediator(IDriverComm* driver, IStorage* storage);
+  explicit InputMediator(IDriverComm* driver, IStorage* storage, ThreadPool* pool);
+
   InputMediator(const InputMediator& o_) = delete;
   InputMediator& operator=(const InputMediator& o_) = delete;
   ~InputMediator() = default;
@@ -37,6 +40,8 @@ public:
 private:
   IDriverComm* m_driver;
   IStorage* m_storage;
+  ThreadPool* m_pool;
+
   std::map<int, std::function<void(std::shared_ptr<DriverData>)>> m_handlers;
 
   void SetupHandlers();

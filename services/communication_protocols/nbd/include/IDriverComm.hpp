@@ -11,9 +11,9 @@
 #define __ILRD_IDRIVER_COMM_HPP__
 
 #include <memory> // shared_ptr
+#include <stdexcept>
 
 #include "DriverData.hpp"
-
 namespace hrd41
 {
 class IDriverComm

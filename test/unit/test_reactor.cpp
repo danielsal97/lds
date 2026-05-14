@@ -1,4 +1,3 @@
-#include "design_patterns/reactor/include/reactor.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <fcntl.h>
@@ -6,6 +5,7 @@
 #include <chrono>
 #include <signal.h>
 
+#include "reactor.hpp"
 using namespace hrd41;
 
 int main() {

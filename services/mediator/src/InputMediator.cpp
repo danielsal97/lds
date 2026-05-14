@@ -1,13 +1,34 @@
 #include "InputMediator.hpp"
+#include "ICommand.hpp"
 #include "IDriverComm.hpp"
 #include "IStorage.hpp"
 #include "DriverData.hpp"
 
 namespace hrd41
 {
-    
-InputMediator::InputMediator(IDriverComm* driver, IStorage* storage)
-    : m_driver(driver), m_storage(storage)
+ class FunctionCommand : public ICommand
+{
+public:
+    explicit FunctionCommand(std::function<void()> func)
+        : m_func(std::move(func))
+    {}
+
+    void Execute() override
+    {
+        m_func();
+    }
+
+private:
+    std::function<void()> m_func;
+};   
+
+
+
+InputMediator::InputMediator(
+    IDriverComm* driver,
+    IStorage* storage,
+    ThreadPool* pool)
+    : m_driver(driver), m_storage(storage), m_pool(pool)
 {
     SetupHandlers();
 }
@@ -48,8 +69,19 @@ void InputMediator::SetupHandlers()
 void InputMediator::Notify(int fd)
 {
     (void)fd;
-    auto request = m_driver->ReceiveRequest();
-    m_handlers.at(request->m_type)(request);
-}
 
+    auto request = m_driver->ReceiveRequest();
+    
+    auto cmd = std::make_shared<FunctionCommand>(
+
+        [this, request]() {
+
+            m_handlers.at(request->m_type)(request);
+
+        }
+
+    );
+
+    m_pool->AddCommand(cmd);
+}
 } // namespace hrd41
