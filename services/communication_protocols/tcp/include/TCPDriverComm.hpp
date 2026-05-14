@@ -33,7 +33,7 @@ public:
     ~TCPDriverComm() override;
 
     std::shared_ptr<DriverData> ReceiveRequest() override;
-    void SendReplay(std::shared_ptr<DriverData> data_) override;
+    void SendReply(std::shared_ptr<DriverData> data_) override;
     void Disconnect() override;
     int GetFD() override;
 

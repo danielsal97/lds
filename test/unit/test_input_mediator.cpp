@@ -57,11 +57,11 @@ public:
         return m_request;
     }
 
-    void SendReplay(std::shared_ptr<DriverData> data_) override
+    void SendReply(std::shared_ptr<DriverData> data_) override
     {
         m_last_reply = data_;
         auto logger = Singleton<Logger>::GetInstance();
-        logger->Write("[MockDriver] SendReplay() called", Logger::DEBUG);
+        logger->Write("[MockDriver] SendReply() called", Logger::DEBUG);
         if (m_last_reply)
         {
             std::string status = (m_last_reply->m_status == DriverData::SUCCESS) ? "SUCCESS" : "FAILURE";

@@ -4,7 +4,7 @@
 // Why:   Abstracts protocol details so system can swap drivers without
 //        changing storage layer logic
 // How:   Implement ReceiveRequest() to get requests from kernel/client,
-//        SendReplay() to send responses, Disconnect() for cleanup
+//        SendReply() to send responses, Disconnect() for cleanup
 // ============================================================================
 
 #ifndef __ILRD_IDRIVER_COMM_HPP__
@@ -26,7 +26,7 @@ public:
 
   virtual std::shared_ptr<DriverData> ReceiveRequest() = 0;
   virtual void
-  SendReplay(std::shared_ptr<DriverData> data_) = 0; // throw IOExcepton
+  SendReply(std::shared_ptr<DriverData> data_) = 0; // throw IOExcepton
   virtual void Disconnect() = 0;
   virtual int GetFD() = 0; // epoll use only
 };

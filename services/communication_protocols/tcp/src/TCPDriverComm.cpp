@@ -143,7 +143,7 @@ std::shared_ptr<DriverData> TCPDriverComm::ReceiveRequest()
     return ret;
 }
 
-void TCPDriverComm::SendReplay(std::shared_ptr<DriverData> data_)
+void TCPDriverComm::SendReply(std::shared_ptr<DriverData> data_)
 {
     struct ReplyHeader
     {

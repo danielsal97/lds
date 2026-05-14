@@ -4,7 +4,7 @@
 // Why:   Allows the storage system to expose a virtual block device to the
 //        kernel; kernel sends read/write/trim/flush commands, we process them
 // How:   Creates socket pair with NBD kernel driver, receives requests via
-//        ReceiveRequest(), processes them, sends responses via SendReplay()
+//        ReceiveRequest(), processes them, sends responses via SendReply()
 // ============================================================================
 
 #include <arpa/inet.h>   // htonl, ntohl, htons

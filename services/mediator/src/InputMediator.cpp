@@ -37,22 +37,22 @@ void InputMediator::SetupHandlers()
 {
     m_handlers[DriverData::READ] = [this](std::shared_ptr<DriverData> request) {
         m_storage->Read(request);
-        m_driver->SendReplay(request);
+        m_driver->SendReply(request);
     };
 
     m_handlers[DriverData::WRITE] = [this](std::shared_ptr<DriverData> request) {
         m_storage->Write(request);
-        m_driver->SendReplay(request);
+        m_driver->SendReply(request);
     };
 
     m_handlers[DriverData::FLUSH] = [this](std::shared_ptr<DriverData> request) {
         request->m_status = DriverData::SUCCESS;
-        m_driver->SendReplay(request);
+        m_driver->SendReply(request);
     };
 
     m_handlers[DriverData::TRIM] = [this](std::shared_ptr<DriverData> request) {
         request->m_status = DriverData::SUCCESS;
-        m_driver->SendReplay(request);
+        m_driver->SendReply(request);
     };
 
     m_handlers[DriverData::DISCONNECT] = [this](std::shared_ptr<DriverData> request) {
@@ -62,7 +62,7 @@ void InputMediator::SetupHandlers()
     m_handlers[DriverData::GET_SIZE] = [this](std::shared_ptr<DriverData> request) {
         request->m_len = m_storage->GetDataSize(request->m_offset);
         request->m_status = DriverData::SUCCESS;
-        m_driver->SendReplay(request);
+        m_driver->SendReply(request);
     };
 }
 

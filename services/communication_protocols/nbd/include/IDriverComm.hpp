@@ -4,7 +4,7 @@
 // Why:   Abstracts protocol details so system can swap drivers without
 //        changing storage layer logic
 // How:   Implement ReceiveRequest() to get requests from kernel/client,
-//        SendReplay() to send responses, Disconnect() for cleanup
+//        SendReply() to send responses, Disconnect() for cleanup
 // ============================================================================
 
 #ifndef __ILRD_IDRIVER_COMM_HPP__

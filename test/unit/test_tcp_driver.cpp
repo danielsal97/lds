@@ -42,7 +42,7 @@ int main()
         {
             logger->Write("[✓] Implements IDriverComm interface", Logger::INFO);
             logger->Write("[✓] ReceiveRequest() - parses wire format", Logger::INFO);
-            logger->Write("[✓] SendReplay() - serializes wire format", Logger::INFO);
+            logger->Write("[✓] SendReply() - serializes wire format", Logger::INFO);
             logger->Write("[✓] GetFD() - returns client socket fd", Logger::INFO);
             logger->Write("[✓] Disconnect() - closes socket", Logger::INFO);
         }
