@@ -13,6 +13,7 @@
 #include "ICallBack.hpp"
 #include "logger.hpp"
 #include "singelton.hpp"
+#include <algorithm>
 #include <string>
 #include <vector>
 

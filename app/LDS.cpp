@@ -9,6 +9,7 @@
 #include "InputMediator.hpp"
 #include "reactor.hpp"
 #include "thread_pool.hpp"
+#include "pnp.hpp"
 
 using namespace hrd41;
 
@@ -41,6 +42,7 @@ void RunServer(Driver& driver, LocalStorage& storage)
     ThreadPool pool;
     InputMediator mediator(&driver, &storage, &pool);
     Reactor reactor;
+    PNP pnp("plugins/");
 
     reactor.Add(driver.GetFD());
     reactor.SetHandler([&mediator](int fd) {
