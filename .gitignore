@@ -6,6 +6,9 @@ bin/
 *.o
 *.so
 *.a
+CMakeFiles/
+Makefile
+cmake_install.cmake
 
 # Binaries
 buse
