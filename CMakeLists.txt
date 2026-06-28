@@ -17,6 +17,7 @@ add_library(lds_core
 
     services/local_storage/src/IStorage.cpp
     services/local_storage/src/LocalStorage.cpp
+    services/local_storage/src/StorageMinion.cpp
     services/local_storage/src/RAIDManager.cpp
 
     utilities/threading/thread_pool/src/thread_pool.cpp
