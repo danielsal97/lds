@@ -2,8 +2,10 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include <thread>
 
 #include "RAIDManager.hpp"
+#include "StorageFactory.hpp"
 #include "NBDDriverComm.hpp"
 #include "TCPDriverComm.hpp"
 #include "InputMediator.hpp"
@@ -69,7 +71,11 @@ void RunServer(Driver& driver, IStorage& storage)
 int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0,
                MinionBackend backend = MinionBackend::MEMORY, const std::string& backend_path = "")
 {
-    RAIDStorage storage(num_minions, size, backend, backend_path);
+    // Use factories to create minions and metadata store
+    auto minions = StorageFactory::CreateMinions(backend, backend_path, num_minions, size);
+    auto metadata_store = StorageFactory::CreateMetadataStore(backend, backend_path);
+
+    RAIDStorage storage(std::move(minions), std::move(metadata_store));
     NBDDriverComm driver(device, size);
 
     std::cout << "LDS: NBD mode - serving "
@@ -82,7 +88,11 @@ int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0,
 int RunTCPMode(int port, size_t size, size_t num_minions = 0,
                MinionBackend backend = MinionBackend::MEMORY, const std::string& backend_path = "")
 {
-    RAIDStorage storage(num_minions, size, backend, backend_path);
+    // Use factories to create minions and metadata store
+    auto minions = StorageFactory::CreateMinions(backend, backend_path, num_minions, size);
+    auto metadata_store = StorageFactory::CreateMetadataStore(backend, backend_path);
+
+    RAIDStorage storage(std::move(minions), std::move(metadata_store));
     TCPDriverComm driver(port);
 
     std::cout << "LDS: TCP mode - listening on port "
@@ -113,6 +123,14 @@ int DispatchMode(int argc, char* argv[])
         }
 
         size_t num_minions = (argc >= 5) ? ParseSize(argv[4]) : 0;
+        if (num_minions == 0)
+        {
+            num_minions = std::thread::hardware_concurrency();
+            if (num_minions == 0) num_minions = 4;  // Fallback to 4
+        }
+        // Ensure even number of minions for RAID (N/2 primary + N/2 mirror)
+        if (num_minions % 2 != 0) num_minions++;
+
         MinionBackend backend = (argc >= 6) ? ParseBackend(argv[5]) : MinionBackend::MEMORY;
         std::string backend_path = (argc >= 7) ? argv[6] : "";
         return RunNBDMode(argv[2], ParseSize(argv[3]), num_minions, backend, backend_path);
@@ -127,6 +145,14 @@ int DispatchMode(int argc, char* argv[])
         }
 
         size_t num_minions = (argc >= 5) ? ParseSize(argv[4]) : 0;
+        if (num_minions == 0)
+        {
+            num_minions = std::thread::hardware_concurrency();
+            if (num_minions == 0) num_minions = 4;  // Fallback to 4
+        }
+        // Ensure even number of minions for RAID (N/2 primary + N/2 mirror)
+        if (num_minions % 2 != 0) num_minions++;
+
         MinionBackend backend = (argc >= 6) ? ParseBackend(argv[5]) : MinionBackend::MEMORY;
         std::string backend_path = (argc >= 7) ? argv[6] : "";
         return RunTCPMode(ParsePort(argv[2]), ParseSize(argv[3]), num_minions, backend, backend_path);

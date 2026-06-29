@@ -181,24 +181,80 @@ CMakeFiles/lds_core.dir/services/local_storage/src/LocalStorage.cpp.s: cmake_for
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/lds_core.dir/services/local_storage/src/LocalStorage.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/daniel/lds/services/local_storage/src/LocalStorage.cpp -o CMakeFiles/lds_core.dir/services/local_storage/src/LocalStorage.cpp.s
 
-CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o: CMakeFiles/lds_core.dir/flags.make
-CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o: services/local_storage/src/StorageMinion.cpp
-CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o -MF CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o.d -o CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o -c /home/daniel/lds/services/local_storage/src/StorageMinion.cpp
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o: CMakeFiles/lds_core.dir/flags.make
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o: services/local_storage/src/StorageMinionMemory.cpp
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o -MF CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o.d -o CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o -c /home/daniel/lds/services/local_storage/src/StorageMinionMemory.cpp
 
-CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/daniel/lds/services/local_storage/src/StorageMinion.cpp > CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.i
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/daniel/lds/services/local_storage/src/StorageMinionMemory.cpp > CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.i
 
-CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/daniel/lds/services/local_storage/src/StorageMinion.cpp -o CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.s
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/daniel/lds/services/local_storage/src/StorageMinionMemory.cpp -o CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.s
+
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o: CMakeFiles/lds_core.dir/flags.make
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o: services/local_storage/src/StorageMinionFile.cpp
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o -MF CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o.d -o CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o -c /home/daniel/lds/services/local_storage/src/StorageMinionFile.cpp
+
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/daniel/lds/services/local_storage/src/StorageMinionFile.cpp > CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.i
+
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/daniel/lds/services/local_storage/src/StorageMinionFile.cpp -o CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.s
+
+CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o: CMakeFiles/lds_core.dir/flags.make
+CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o: services/local_storage/src/MemoryMetadataStore.cpp
+CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o -MF CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o.d -o CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o -c /home/daniel/lds/services/local_storage/src/MemoryMetadataStore.cpp
+
+CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/daniel/lds/services/local_storage/src/MemoryMetadataStore.cpp > CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.i
+
+CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/daniel/lds/services/local_storage/src/MemoryMetadataStore.cpp -o CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.s
+
+CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o: CMakeFiles/lds_core.dir/flags.make
+CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o: services/local_storage/src/FileMetadataStore.cpp
+CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o -MF CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o.d -o CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o -c /home/daniel/lds/services/local_storage/src/FileMetadataStore.cpp
+
+CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/daniel/lds/services/local_storage/src/FileMetadataStore.cpp > CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.i
+
+CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/daniel/lds/services/local_storage/src/FileMetadataStore.cpp -o CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.s
+
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o: CMakeFiles/lds_core.dir/flags.make
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o: services/local_storage/src/StorageFactory.cpp
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o -MF CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o.d -o CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o -c /home/daniel/lds/services/local_storage/src/StorageFactory.cpp
+
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/daniel/lds/services/local_storage/src/StorageFactory.cpp > CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.i
+
+CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/daniel/lds/services/local_storage/src/StorageFactory.cpp -o CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.s
 
 CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o: services/local_storage/src/RAIDManager.cpp
 CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o -MF CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o.d -o CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o -c /home/daniel/lds/services/local_storage/src/RAIDManager.cpp
 
 CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.i: cmake_force
@@ -212,7 +268,7 @@ CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.s: cmake_forc
 CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o: utilities/threading/thread_pool/src/thread_pool.cpp
 CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o -MF CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o.d -o CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o -c /home/daniel/lds/utilities/threading/thread_pool/src/thread_pool.cpp
 
 CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.i: cmake_force
@@ -226,7 +282,7 @@ CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.s: c
 CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o: utilities/logger/src/logger.cpp
 CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o -MF CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o.d -o CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o -c /home/daniel/lds/utilities/logger/src/logger.cpp
 
 CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.i: cmake_force
@@ -240,7 +296,7 @@ CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.s: cmake_force
 CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.o: plugins/src/dir_monitor.cpp
 CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.o -MF CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.o.d -o CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.o -c /home/daniel/lds/plugins/src/dir_monitor.cpp
 
 CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.i: cmake_force
@@ -254,7 +310,7 @@ CMakeFiles/lds_core.dir/plugins/src/dir_monitor.cpp.s: cmake_force
 CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.o: plugins/src/pnp.cpp
 CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.o -MF CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.o.d -o CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.o -c /home/daniel/lds/plugins/src/pnp.cpp
 
 CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.i: cmake_force
@@ -268,7 +324,7 @@ CMakeFiles/lds_core.dir/plugins/src/pnp.cpp.s: cmake_force
 CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.o: plugins/src/soLoader.cpp
 CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.o -MF CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.o.d -o CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.o -c /home/daniel/lds/plugins/src/soLoader.cpp
 
 CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.i: cmake_force
@@ -282,7 +338,7 @@ CMakeFiles/lds_core.dir/plugins/src/soLoader.cpp.s: cmake_force
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.o: external/Inotify_cpp/inotify/InotifyManager.cpp
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.o -MF CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.o.d -o CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.o -c /home/daniel/lds/external/Inotify_cpp/inotify/InotifyManager.cpp
 
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.i: cmake_force
@@ -296,7 +352,7 @@ CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyManager.cpp.s: cmake
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.o: external/Inotify_cpp/inotify/InotifyWatch.cpp
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.o -MF CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.o.d -o CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.o -c /home/daniel/lds/external/Inotify_cpp/inotify/InotifyWatch.cpp
 
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.i: cmake_force
@@ -310,7 +366,7 @@ CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch.cpp.s: cmake_f
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o: CMakeFiles/lds_core.dir/flags.make
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o: external/Inotify_cpp/inotify/InotifyEvent.cpp
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o: CMakeFiles/lds_core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o -MF CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o.d -o CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o -c /home/daniel/lds/external/Inotify_cpp/inotify/InotifyEvent.cpp
 
 CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.i: cmake_force
@@ -331,7 +387,11 @@ lds_core_OBJECTS = \
 "CMakeFiles/lds_core.dir/services/communication_protocols/nbd/src/NBDDriverComm.cpp.o" \
 "CMakeFiles/lds_core.dir/services/local_storage/src/IStorage.cpp.o" \
 "CMakeFiles/lds_core.dir/services/local_storage/src/LocalStorage.cpp.o" \
-"CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o" \
+"CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o" \
+"CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o" \
+"CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o" \
+"CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o" \
+"CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o" \
 "CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o" \
 "CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o" \
 "CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o" \
@@ -353,7 +413,11 @@ liblds_core.a: CMakeFiles/lds_core.dir/services/communication_protocols/nbd/src/
 liblds_core.a: CMakeFiles/lds_core.dir/services/communication_protocols/nbd/src/NBDDriverComm.cpp.o
 liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/IStorage.cpp.o
 liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/LocalStorage.cpp.o
-liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinion.cpp.o
+liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionMemory.cpp.o
+liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/StorageMinionFile.cpp.o
+liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/MemoryMetadataStore.cpp.o
+liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/FileMetadataStore.cpp.o
+liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/StorageFactory.cpp.o
 liblds_core.a: CMakeFiles/lds_core.dir/services/local_storage/src/RAIDManager.cpp.o
 liblds_core.a: CMakeFiles/lds_core.dir/utilities/threading/thread_pool/src/thread_pool.cpp.o
 liblds_core.a: CMakeFiles/lds_core.dir/utilities/logger/src/logger.cpp.o
@@ -365,7 +429,7 @@ liblds_core.a: CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyWatch
 liblds_core.a: CMakeFiles/lds_core.dir/external/Inotify_cpp/inotify/InotifyEvent.cpp.o
 liblds_core.a: CMakeFiles/lds_core.dir/build.make
 liblds_core.a: CMakeFiles/lds_core.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Linking CXX static library liblds_core.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/daniel/lds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Linking CXX static library liblds_core.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/lds_core.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/lds_core.dir/link.txt --verbose=$(VERBOSE)
 

@@ -1,6 +1,4 @@
 #include "RAIDManager.hpp"
-#include "StorageMinionMemory.hpp"
-#include "StorageMinionFile.hpp"
 #include "DriverData.hpp"
 #include "logger.hpp"
 
@@ -8,20 +6,19 @@
 #include <stdexcept>
 #include <mutex>
 #include <shared_mutex>
-#include <filesystem>
-#include <fstream>
-#include <sstream>
 
 namespace hrd41
 {
 
-
-RAIDStorage::RAIDStorage(size_t num_minions, size_t minion_size, MinionBackend backend, const std::string& backend_path)
-    : IStorage(num_minions * minion_size),
-      m_minion_size(minion_size),
-      m_backend_path(backend_path)
+RAIDStorage::RAIDStorage(std::vector<std::unique_ptr<IStorageMinion>> minions,
+                         std::unique_ptr<IMetadataStore> metadata_store)
+    : IStorage(minions.size() > 0 ? minions[0]->Size() * minions.size() : 0),
+      m_minions(std::move(minions)),
+      m_metadata_store(std::move(metadata_store))
 {
     auto logger = Singleton<Logger>::GetInstance();
+
+    size_t num_minions = m_minions.size();
 
     if (num_minions == 0)
     {
@@ -40,47 +37,20 @@ RAIDStorage::RAIDStorage(size_t num_minions, size_t minion_size, MinionBackend b
         throw std::runtime_error("RAIDStorage requires at least one primary minion");
     }
 
-    m_stripe_size = minion_size;
+    m_minion_size = m_minions[0]->Size();
+    m_stripe_size = m_minion_size;
 
-    // Create minions based on backend type
-    if (backend == MinionBackend::FILE && backend_path.empty())
+    // Load metadata from persistent store
     {
-        throw std::runtime_error("FILE backend requires backend_path to be specified");
+        std::unique_lock<std::shared_mutex> lock(m_offsets_lock);
+        m_offset_sizes = m_metadata_store->Load();
     }
 
-    // Create backend directory if needed
-    if (backend == MinionBackend::FILE)
-    {
-        std::filesystem::create_directories(backend_path);
-    }
-
-    for (size_t i = 0; i < num_minions; ++i)
-    {
-        switch (backend)
-        {
-            case MinionBackend::MEMORY:
-                m_minions.push_back(std::make_unique<StorageMinionMemory>(minion_size));
-                break;
-            case MinionBackend::FILE:
-            {
-                std::string file_path = backend_path + "/minion" + std::to_string(i) + ".img";
-                m_minions.push_back(std::make_unique<StorageMinionFile>(file_path, minion_size));
-                break;
-            }
-            default:
-                throw std::runtime_error("Unknown minion backend");
-        }
-    }
-
-    // Load metadata after minions are created
-    LoadMetadata();
-
-    std::string backend_str = (backend == MinionBackend::MEMORY) ? "memory" : "file";
     logger->Write("[RAID] Initialized with " + std::to_string(num_minions) + " minions (" +
-                  backend_str + " backend), " +
                   std::to_string(m_num_primary) + " primary + " +
-                  std::to_string(m_num_primary) + " mirror, stripe_size=" +
-                  std::to_string(m_stripe_size) + " bytes", Logger::INFO);
+                  std::to_string(m_num_primary) + " mirror), stripe_size=" +
+                  std::to_string(m_stripe_size) + " bytes, " +
+                  std::to_string(m_offset_sizes.size()) + " allocated offsets", Logger::INFO);
 }
 
 size_t RAIDStorage::PrimaryIndex(size_t offset) const
@@ -204,10 +174,9 @@ void RAIDStorage::Write(std::shared_ptr<DriverData> data_)
         {
             std::unique_lock<std::shared_mutex> lock(m_offsets_lock);
             m_offset_sizes[original_offset] = original_size;
+            // Persist metadata through the abstract store
+            m_metadata_store->Save(m_offset_sizes);
         }
-
-        // Persist metadata to disk
-        SaveMetadata();
 
         logger->Write("[RAID-WRITE] offset=" + std::to_string(original_offset) +
                       " SUCCESS (" + std::to_string(original_size) + " bytes)", Logger::INFO);
@@ -247,84 +216,6 @@ std::vector<std::pair<size_t, size_t>> RAIDStorage::ListOffsets() const
     }
 
     return result;
-}
-
-void RAIDStorage::SaveMetadata() const
-{
-    // Only save if we have a backend path (FILE backend)
-    if (m_backend_path.empty())
-    {
-        return;
-    }
-
-    std::string metadata_path = m_backend_path + "/raid_metadata.dat";
-
-    std::shared_lock<std::shared_mutex> lock(m_offsets_lock);
-
-    std::ofstream file(metadata_path, std::ios::binary);
-    if (!file.is_open())
-    {
-        auto logger = Singleton<Logger>::GetInstance();
-        logger->Write("[RAID] Failed to open metadata file for writing: " + metadata_path, Logger::ERROR);
-        return;
-    }
-
-    for (const auto& [offset, size] : m_offset_sizes)
-    {
-        file.write(reinterpret_cast<const char*>(&offset), sizeof(size_t));
-        file.write(reinterpret_cast<const char*>(&size), sizeof(size_t));
-    }
-
-    file.close();
-    auto logger = Singleton<Logger>::GetInstance();
-    logger->Write("[RAID] Metadata saved to " + metadata_path + " (" +
-                  std::to_string(m_offset_sizes.size()) + " entries)", Logger::DEBUG);
-}
-
-void RAIDStorage::LoadMetadata()
-{
-    auto logger = Singleton<Logger>::GetInstance();
-
-    // Only load if we have a backend path (FILE backend)
-    if (m_backend_path.empty())
-    {
-        logger->Write("[RAID] No backend path; skipping metadata load", Logger::DEBUG);
-        return;
-    }
-
-    std::string metadata_path = m_backend_path + "/raid_metadata.dat";
-
-    // If metadata file doesn't exist, start with empty map
-    if (!std::filesystem::exists(metadata_path))
-    {
-        logger->Write("[RAID] Metadata file not found: " + metadata_path + " (starting fresh)", Logger::INFO);
-        return;
-    }
-
-    std::ifstream file(metadata_path, std::ios::binary);
-    if (!file.is_open())
-    {
-        logger->Write("[RAID] Failed to open metadata file for reading: " + metadata_path, Logger::ERROR);
-        return;
-    }
-
-    std::unique_lock<std::shared_mutex> lock(m_offsets_lock);
-    m_offset_sizes.clear();
-
-    size_t offset, size;
-    while (file.read(reinterpret_cast<char*>(&offset), sizeof(size_t)))
-    {
-        if (!file.read(reinterpret_cast<char*>(&size), sizeof(size_t)))
-        {
-            logger->Write("[RAID] Corrupted metadata file: incomplete entry", Logger::ERROR);
-            m_offset_sizes.clear();
-            return;
-        }
-        m_offset_sizes[offset] = size;
-    }
-
-    logger->Write("[RAID] Metadata loaded from " + metadata_path + " (" +
-                  std::to_string(m_offset_sizes.size()) + " entries)", Logger::INFO);
 }
 
 } // namespace hrd41

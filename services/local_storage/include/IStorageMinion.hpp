@@ -23,6 +23,7 @@ public:
     virtual void Read(size_t offset, std::vector<char>& buffer) = 0;
     virtual void Write(size_t offset, const std::vector<char>& buffer) = 0;
     virtual size_t GetDataSize(size_t offset) const = 0;
+    virtual size_t Size() const = 0;  // Total size of this minion
 };
 
 } // namespace hrd41
