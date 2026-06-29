@@ -1,60 +1,144 @@
 # LDS — Local Drive Storage
 
-A modular RAID-based storage architecture built in **C++20** on Linux, designed for future distributed storage nodes.  
-From the user's perspective it is a regular block device. Under the hood, data is stored across independent storage minions with RAID01-inspired striping and mirroring.
+A **modular storage infrastructure** built in **C++20** that separates transport, execution, storage, and persistence into independent layers.
+
+**The Problem:**
+Tightly coupled storage systems are expensive to maintain and extend. Adding a new transport (TCP, RDMA, UCX), storage backend (Memory, File, Network), or persistence strategy (File, SQLite, Redis) typically requires modifying core logic. This causes complexity to compound and risk to increase.
+
+**The Solution:**
+LDS demonstrates a layered architecture where:
+- **Storage logic** (RAIDStorage) never knows about backend implementations
+- **New backends** are added as new implementations, not modifications
+- **Transport** (NBD, TCP) is swappable without touching storage
+- **Metadata persistence** is independent from data storage
+- **Asynchronous execution** is decoupled from business logic
+- **Dependencies** are injected, not created internally
+
+**Current Implementation:** RAID01-inspired storage with Memory and File backends, dual-transport support (NBD kernel block device + multi-client TCP), and infrastructure-grade layering.
+
+---
+
+## Architecture Principles
+
+These principles guide every layer of LDS:
+
+| Principle | Application |
+|-----------|-------------|
+| **Single Responsibility** | RAIDStorage handles only RAID logic; StorageFactory handles backend creation; IMetadataStore handles persistence |
+| **Interface-Driven Design** | Concrete implementations depend on abstract interfaces (IStorage, IStorageMinion, IMetadataStore, IDriverComm) |
+| **Open/Closed Principle** | New backends (NetworkMinion, UCXMinion) and metadata stores (SQLiteMetadataStore, RedisMetadataStore) are added as new implementations, never modifying existing code |
+| **Dependency Injection** | All dependencies are external; RAIDStorage is constructed with minions + metadata store, not self-instantiation |
+| **Pluggable Backends** | Swap memory ↔ file ↔ network storage by changing factory, not RAIDStorage code |
+| **Transport Abstraction** | NBD and TCP are interchangeable; adding UDP or custom protocols requires zero changes to storage layer |
+| **Asynchronous Execution** | I/O handling stays non-blocking; storage work is delegated to ThreadPool (storage itself may block) |
+| **Data ≠ Metadata** | Raw blocks live in minions; offset→size mappings live in metadata store; independent persistence strategies |
 
 ---
 
 ## Architecture
 
+### Initialization Phase
+
+Dependencies are created once at startup and injected into components. This decouples business logic from infrastructure decisions.
+
 ```
-User process
+main()
+  │
+  ├─ StorageFactory::CreateMinions(backend, path, count, size)
+  │    └─ Returns std::vector<IStorageMinion> (Memory/File/Network)
+  │
+  ├─ MetadataFactory::CreateMetadataStore(backend, path)
+  │    └─ Returns std::unique_ptr<IMetadataStore> (Memory/File)
+  │
+  ├─ RAIDStorage(minions, metadata_store)
+  │    └─ No knowledge of backend types; only interfaces
+  │
+  └─ RunServer(driver, storage, reactor)
+       └─ Reactor, InputMediator, ThreadPool created
+```
+
+**Why two factories?**
+- Storage decisions (backend minion type) are separate from persistence decisions (how to store metadata)
+- Each can evolve independently
+- Factory choices happen once; RAIDStorage is immutable after construction
+
+---
+
+### Runtime Phase
+
+Requests flow through multiple abstraction layers without blocking.
+
+```
+Client Request (NBD/TCP)
     │
     ▼
-┌─────────────────────────────────────────────────┐
-│  DriverComm (IDriverComm interface)             │
-│  ┌─────────────┐        ┌──────────────┐       │
-│  │ NBDDriverComm       │ TCPDriverComm │       │
-│  │ (kernel I/O)       │ (multi-client) │       │
-│  └─────────────┘        └──────────────┘       │
-└────────────┬──────────────────────────────────┘
-             │
-             ▼
-┌─────────────────────────────────────────────────┐
-│  InputMediator                                  │
-│  (read/write/flush/trim dispatcher)             │
-└────────────┬──────────────────────────────────┘
-             │
-             ▼
-┌─────────────────────────────────────────────────┐
-│  IStorage (abstract storage interface)          │
-│  ┌──────────────┐           ┌────────────────┐ │
-│  │ LocalStorage │           │  RAIDStorage   │ │
-│  │ (deprecated) │           │  (striping +   │ │
-│  │              │           │   mirroring)   │ │
-│  └──────────────┘           └────────┬────────┘ │
-└─────────────────────────────────┬─────────────┘
-                                  │
-                    ┌─────────────┼─────────────┐
-                    ▼             ▼             ▼
-              ┌──────────────────────────────────┐
-              │    IStorageMinion (abstract)     │
-              │   with per-minion RWLock         │
-              └──────┬────────────────┬──────────┘
-                     │                │
-         ┌───────────┘                └────────────┐
-         ▼                                         ▼
-  ┌────────────────┐                      ┌─────────────────┐
-  │StorageMinionMem│                      │StorageMinionFile│
-  │(in-memory      │                      │(disk-backed .img)
-  │std::vector)    │                      │pread/pwrite I/O)│
-  └────────────────┘                      └────────┬────────┘
-         │                                         │
-   ┌─────┴──────┬──────────┐              ┌────────┴─────────┐
-   ▼            ▼          ▼              ▼                  ▼
-Minion 0    Minion 1   Minion N      raid_metadata.dat  minion*.img
-(memory)    (memory)   (memory)      (offset→size map)  (raw blocks)
+Reactor (epoll)
+    │ detects client fd ready
+    ▼
+InputMediator::Notify(fd)
+    │ dispatcher routes to handler
+    ▼
+DriverComm::ReceiveRequest(fd)
+    │ reads frame from specific fd
+    ▼
+InputMediator
+    │ parses command type (READ/WRITE/FLUSH)
+    ▼
+CommandFactory
+    │ creates ICommand object
+    ▼
+ThreadPool / Work Priority Queue
+    │ enqueues: WRITE > READ > FLUSH (priority)
+    │
+    ▼
+ICommand::Execute()
+    │ calls RAIDStorage::Read/Write/Flush
+    ▼
+RAIDStorage (IStorage)
+    │ RAID logic:
+    ├─ Stripe offset → primary minion + mirror minion
+    ├─ Call IStorageMinion::Read/Write
+    ├─ Call IMetadataStore::Save on write
+    │
+    └─ Return result
+    
+    ▼
+DriverComm::SendReply(data)
+    │ writes response frame to fd
+    ▼
+Client Response
 ```
+
+**Key properties:**
+- **No blocking:** Reactor never waits; one thread processes all I/O events
+- **Per-minion concurrency:** Each IStorageMinion has independent RWLock (N-way parallelism)
+- **Decoupled execution:** ThreadPool prioritization is invisible to storage logic
+- **Interface-driven:** RAIDStorage never knows if minions are memory/file/network
+
+### Dependency Injection
+
+**All dependencies are created during initialization and injected through abstract interfaces. RAIDStorage never constructs its own dependencies.**
+
+```
+Application Startup
+    │
+    ├─ StorageFactory::CreateMinions(backend, path, count, size)
+    │   └─ Returns std::vector<std::unique_ptr<IStorageMinion>>
+    │
+    ├─ MetadataFactory::Create(backend, path)
+    │   └─ Returns std::unique_ptr<IMetadataStore>
+    │
+    └─ RAIDStorage(minions, metadata_store)
+        └─ No knowledge of concrete implementations
+```
+
+**Benefits:**
+- RAIDStorage focuses on RAID algorithms, not infrastructure details
+- Backends can change (memory → file → network) without modifying RAIDStorage
+- Unit tests can inject mock implementations
+- Configuration happens at startup time, not compiled in
+
+---
 
 ### Two Modes
 
@@ -76,36 +160,46 @@ Both modes use the same `InputMediator` → `RAIDStorage` pipeline. `TCPDriverCo
 
 ---
 
-## Components Built
+## Core Components
 
-### Phase 1 — Core Framework
+### Storage (RAID + Abstraction)
 
-| Component | Path | Description |
-|---|---|---|
-| **Reactor** | `design_patterns/reactor/` | `epoll`-based event loop — multi-client I/O event dispatcher |
-| **InputMediator** | `services/mediator/` | Routes READ/WRITE/FLUSH/TRIM/GET_SIZE/LIST_OFFSETS to storage |
-| **RAIDStorage** | `services/local_storage/` | RAID01-inspired striping with per-minion locking; persists metadata to `raid_metadata.dat` |
-| **IStorageMinion** | `services/local_storage/` | Abstract pluggable backend interface with per-minion RWLock |
-| **StorageMinionMemory** | `services/local_storage/` | In-memory backend using `std::vector<char>` — fast, volatile |
-| **StorageMinionFile** | `services/local_storage/` | Disk-backed backend using pread/pwrite to `minion*.img` files — persistent |
-| **NBDDriverComm** | `services/communication_protocols/nbd/` | Reads `nbd_request` from kernel, writes `nbd_reply` back |
-| **Factory** | `design_patterns/factory/` | Creates commands and plugins by name at runtime |
-| **Observer** | `design_patterns/observer/` | `Dispatcher<T>` + `CallBack<T,Sub>` — type-safe event routing |
-| **Command** | `design_patterns/command/` | `ICommand` interface with priority (WRITE > READ > FLUSH) |
-| **ThreadPool + WPQ** | `utilities/threading/` | Priority work queue + fixed thread pool for async execution |
-| **Plugin System** | `plugins/` | `DirMonitor` (inotify) + `PNP` + `soLoader` — loads `.so` plugins at runtime via `dlopen` |
-| **Logger** | `utilities/logger/` | Thread-safe singleton logger with DEBUG/INFO/ERROR levels |
+| Component | Description |
+|---|---|
+| **RAIDStorage** | RAID01-inspired striping, mirroring, failover — pure RAID logic (no backend knowledge) |
+| **StorageFactory** | Creates ready-made minions and metadata stores at initialization |
+| **IStorageMinion** | Abstract minion backend interface with per-minion RWLock |
+| **StorageMinionMemory** | In-memory backend (`std::vector<char>`) — fast, volatile |
+| **StorageMinionFile** | Disk-backed backend (`pread`/`pwrite` to `.img` files) — persistent |
+| **IMetadataStore** | Abstract metadata persistence interface |
+| **MemoryMetadataStore** | Volatile metadata (lost on restart) |
+| **FileMetadataStore** | Persistent metadata (`raid_metadata.dat`) |
 
-### Phase 2A — Multi-Client TCP Bridge
+### Transport (NBD + TCP)
 
-| Component | Path | Description |
-|---|---|---|
-| **TCPDriverComm** | `services/communication_protocols/tcp/` | Multi-client TCP server (Reactor-based) with reconnection support |
-| **TCP Persistent Metadata** | `.tcp_allocations` | Binary file tracking TCP client session allocations |
-| **RAID Persistent Metadata** | `raid_metadata.dat` | Binary file tracking RAID logical offset→size map (FILE backend only) |
-| **LIST_OFFSETS** | `InputMediator` | Query all stored offsets (for client auto-discovery on reconnect) |
-| **Interfaces** | `interfaces/` | Shared `IDriverComm`, `IMediator`, `IStorage` headers |
-| **TCP client** | `test_client.py` | Python client for testing TCP protocol |
+| Component | Description |
+|---|---|
+| **NBDDriverComm** | Linux NBD kernel interface (IDriverComm) |
+| **TCPDriverComm** | Multi-client TCP server (Reactor-based, reconnection support) |
+| **InputMediator** | Routes commands (READ/WRITE/FLUSH/TRIM/GET_SIZE/LIST_OFFSETS) to storage |
+
+### Concurrency & Execution
+
+| Component | Description |
+|---|---|
+| **Reactor** | `epoll`-based event loop for non-blocking I/O multiplexing |
+| **CommandFactory** | Creates ICommand objects (READ/WRITE/FLUSH) at runtime |
+| **ThreadPool + WPQ** | Priority work queue (WRITE > READ > FLUSH) with fixed thread pool |
+| **ICommand** | Encapsulates work items with priority for queue ordering |
+
+### Infrastructure & Patterns
+
+| Component | Description |
+|---|---|
+| **Dispatcher & Observer** | Type-safe event routing with minimal overhead |
+| **Plugin System** | DirMonitor (inotify) + dlopen for runtime feature loading |
+| **Logger** | Thread-safe singleton with DEBUG/INFO/ERROR levels |
+| **Design Patterns** | Reactor, Factory, Command, Observer, Strategy, Plugin |
 
 ---
 
@@ -270,11 +364,78 @@ lds/
 
 ---
 
-## RAID01-Inspired Striping
+## Key Architectural Decisions
 
-**Load Distribution + Mirroring (In-Memory Layout):**
+### Layered Storage Abstraction
 
-Current implementation uses in-memory minions. The storage layout is inspired by RAID01 principles:
+**Storage Factory Pattern** — RAIDStorage doesn't know about backend types (Memory/File/Network/RDMA/UCX). StorageFactory owns backend selection and instantiation. RAIDStorage receives ready-made minions through `IStorageMinion` interface.
+
+**Metadata Store Abstraction** — RAIDStorage doesn't know how to persist metadata (File/Memory/SQL/Redis). IMetadataStore owns persistence strategy. The `Save(map)` API means RAIDStorage owns logical state; the store just persists it.
+
+**Data ≠ Metadata Separation** — Raw blocks live in minions (via IStorageMinion), offset→size mappings live in metadata stores (via IMetadataStore). Each has independent persistence strategy and can evolve separately.
+
+### Concurrency & Load Distribution
+
+**Per-Minion RWLock** — Each minion has independent `shared_mutex` for concurrent reads + exclusive writes. N minions = N-way parallelism with no global bottleneck.
+
+**RAID01-Inspired Striping** — Distributes offsets across minions, replicates to mirrors. Reads from primary (fast path), writes to primary + mirror for durability.
+
+**epoll + Reactor** — Single thread handles all I/O events without blocking. Reactor multiplexes all client fds via `epoll_wait`, dispatching events to handlers. Eliminates thread-per-connection overhead.
+
+### Transport Independence
+
+**IDriverComm Interface** — NBD and TCP are interchangeable implementations. Swapping transports requires only `LDS.cpp:main()` — zero changes to InputMediator or RAIDStorage.
+
+**LIST_OFFSETS Protocol** — Enables clients to reconnect and discover all stored offsets. Supports stateless clients that resume via server-side state enumeration.
+
+### Execution Abstraction
+
+**CommandFactory + ThreadPool** — Work is represented as ICommand objects. CommandFactory creates them; ThreadPool prioritizes (WRITE > READ > FLUSH) without blocking I/O.
+
+**Templates for Observer/Factory** — Avoids virtual dispatch overhead in hot path. `Dispatcher<T>` instantiated at compile time per event type.
+
+---
+
+## Technologies
+
+C++20 · Linux · epoll · inotify · NBD (Network Block Device) · TCP/UDP sockets · pthreads · dlopen/dlsym · POSIX · GNU Make · Docker · Python 3
+
+---
+
+## Performance Characteristics
+
+| Aspect | Property |
+|---|---|
+| **I/O Multiplexing** | `epoll`-based; Reactor does not execute storage work, dispatches ready fds and returns to epoll |
+| **Concurrency Model** | per-minion RWLock, no global storage lock — N minions handle 1/N offset space independently |
+| **Request Execution** | Asynchronous via ThreadPool with priority queue (WRITE > READ > FLUSH) |
+| **Data Path** | Single-threaded Reactor detects fd readiness; InputMediator reads request, enqueues command, returns to epoll |
+| **Memory Overhead** | Metadata size (offset→size mappings) is O(write_count); Memory backend allocates vectors; File backend stores data in image files |
+| **Backend Independence** | Storage algorithms never know minion type — Memory vs File performance characteristics are encapsulated |
+
+---
+
+## Known Limitations
+
+These are intentional constraints or areas for future improvement:
+
+| Limitation | Impact | Future Direction |
+|---|---|---|
+| **Synchronous Mirroring** | Writes wait for both primary + mirror to complete before responding to client | Async mirror writes with eventual consistency option |
+| **Metadata Persistence** | Metadata saved after each write (fsync) — limits write throughput on FILE backend | Batched metadata updates, separate WAL (write-ahead log) |
+| **Single RAID Controller** | Only one server process manages RAID logic — no distributed control | Consensus-based RAID controller with failover |
+| **No Automatic Mirror Rebuild** | If primary fails, mirror is read-only until manual intervention | Automatic mirror promotion and rebuild from backup |
+| **No Checksum Validation** | Data integrity depends on filesystem; no end-to-end checksums | CRC32/SHA256 per-block validation |
+| **Transient Metadata Loss (Memory Backend)** | Server restart loses all allocation metadata | Configurable metadata durability guarantees |
+| **Single Reactor Thread** | One thread multiplexes all fds; may become bottleneck under very high event rates | Work-stealing or io_uring-based multiplexing on future kernels |
+
+---
+
+## Implementation Details
+
+### RAID01-Inspired Striping
+
+The storage layout distributes load across minions and replicates for durability:
 
 ```
 4 Minions Example (2 primary + 2 mirror):
@@ -290,123 +451,65 @@ Writes: primary[idx] + mirror[idx]
         Each minion has std::shared_mutex — concurrent reads, exclusive writes
 ```
 
-**Architectural Strengths:**
-- **Load distribution**: N minions handle 1/N of offset space (no single bottleneck)
-- **Per-minion concurrency**: Each StorageMinion has independent RWLock (N-way parallelism)
-- **Durability**: All writes replicated to mirror minion
-- **Failover**: Read from mirror if primary fails
-- **Backend abstraction**: StorageMinion interface allows swapping memory → Raspberry Pi → NBD → network storage
+**Properties:**
+- N minions handle 1/N of offset space (no single bottleneck)
+- Per-minion RWLock enables N-way parallelism
+- All writes replicated to mirror minion for durability
+- Read from mirror if primary fails
 
----
+### StorageMinionMemory Implementation
 
-## Key Technical Decisions
+Uses `std::vector<char>` for fast in-memory storage. Suitable for testing and transient workloads.
 
-**Why epoll + Reactor?** Single thread handles all I/O events (no thread-per-connection overhead). Reactor dispatches each fd event to handler and returns to `epoll_wait` immediately. Multi-client TCP via per-client fd tracking.
+### StorageMinionFile Implementation
 
-**Why per-minion RWLock instead of global mutex?** Each `StorageMinion` has `shared_mutex` for concurrent reads + exclusive writes. N minions = N-way parallelism with no global bottleneck. RAID stripe distributes offsets across minions.
+Uses `pread`/`pwrite` system calls for positional file I/O to `minion*.img` files. Pre-allocates space with `ftruncate()` on creation.
 
-**Why RAID01-inspired striping?** Distributes load across minions and replicates to mirror. No single bottleneck. Reads from primary (fast path), writes sync to primary + async to mirror for durability.
+### FileMetadataStore Format
 
-**Why IStorageMinion interface?** Enables pluggable storage backends without changing RAID logic or communication layers. Current: StorageMinionMemory (fast, volatile) and StorageMinionFile (persistent). Future: Raspberry Pi, NBD, network storage. Each backend handles its own durability strategy.
-
-**Why separate StorageMinionMemory and StorageMinionFile?** Clean separation of concerns. StorageMinionMemory uses `std::vector<char>` for speed. StorageMinionFile uses pread/pwrite to `.img` files for persistence. RAIDStorage doesn't know or care—it only calls the IStorageMinion interface.
-
-**Why raid_metadata.dat (separate from minion*.img)?** RAIDStorage persists the logical offset→size map independently of raw block storage. StorageMinionFile persists data; RAIDStorage persists metadata. On restart: StorageMinionFile recovers raw blocks, LoadMetadata() recovers the mapping. This separation enables future backends (e.g., remote minions, cloud storage) to have different persistence strategies.
-
-**Why `TCPDriverComm` implements `IDriverComm`?** Complete transport abstraction. Swapping NBD ↔ TCP requires only `LDS.cpp:main()` — zero changes to InputMediator, RAIDStorage, or StorageMinion.
-
-**Why LIST_OFFSETS operation?** Clients can reconnect and discover all previously-stored offsets. Enables stateless clients that resume via server-side state enumeration.
-
-**Why persistent allocation metadata?** `.tcp_allocations` stores TCP session allocations; `raid_metadata.dat` stores RAID logical allocations. FILE backend survives server restart with full state recovery. Supports complex client workflows: write → disconnect → restart server → reconnect → LIST_OFFSETS → resume.
-
-**Why templates for Observer/Factory?** Avoids virtual dispatch overhead in hot path. `Dispatcher<T>` instantiated at compile time per event type.
-
----
-
-## Technologies
-
-C++20 · Linux · epoll · inotify · NBD (Network Block Device) · TCP/UDP sockets · pthreads · dlopen/dlsym · POSIX · GNU Make · Docker · Python 3
-
----
-
-## Storage Abstraction
-
-**The critical architectural insight: complete separation of interface from implementation at multiple layers.**
-
+Binary format for `raid_metadata.dat`:
 ```
-IStorage (abstract storage interface)
-    ▲
-    │
-    ├──────────────┬──────────────┐
-    │              │              │
-LocalStorage   RAIDStorage    (Future)
-(deprecated)   (current)      (UDP, etc.)
-                   │
-                   │ persists metadata to →
-                   │
-            raid_metadata.dat
-            (offset→size map)
-                   │
-                   ├─────────────────────────────────┐
-                   │                                 │
-        IStorageMinion (abstract interface)          │
-        (per-minion pluggable backend)               │
-            ▲                                        │
-            │                                        │
-    ┌───────┼───────────┐                            │
-    │       │           │                            │
-  Memory   File       (Future)                       │
-  backend  backend    Network/NBD/etc.               │
-    │       │           │                            │
-    ├───────┴───────────┤                            │
-    │                   │                            │
- volatile          minion*.img files ◄──────────────┘
- (data loss         (persistent
-  on restart)        raw blocks)
+[offset_0 (8 bytes)][size_0 (8 bytes)]
+[offset_1 (8 bytes)][size_1 (8 bytes)]
+...
 ```
 
-**Multi-layer abstraction:**
-1. **IStorage** — Decouples DriverComm (NBD/TCP) from storage strategy
-2. **IStorageMinion** — Decouples RAIDStorage from minion backend (memory/file/network)
-3. **MinionBackend enum** — Runtime selection of backend (not compile-time)
+Loaded entirely into memory on startup; persisted after every write operation.
 
-The InputMediator, Reactor, and DriverComm layers **never directly depend on storage implementation**. They only know about `IStorage` interface. RAIDStorage knows only about `IStorageMinion` interface, not specific backends. This means:
+### Reactor Event Loop
 
-- New storage backends (StorageMinionFile, StorageMinionNetwork, StorageMinionNBD) can be added without modifying RAIDStorage, InputMediator, or drivers
-- Persistence strategy can be chosen at runtime (CLI flag): `--backend memory` vs `--backend file`
-- Unit tests can mock `IStorage` or `IStorageMinion` at any layer
-- Data reliability evolves without rewriting: memory (fast) → file (durable) → network (distributed)
+Uses Linux `epoll` for efficient I/O multiplexing. Single thread processes all events without blocking.
 
-This is not just an OOP exercise — it's a fundamental architectural principle that keeps concerns separated and enables the system to evolve from single-node (memory) → persistent (disk) → distributed (network minions) without rewriting the core logic.
+### ThreadPool Priority Queue
+
+WRITE commands execute first (metadata consistency), then READ, then FLUSH. Priority ensures writes don't starve but reads don't block writes.
 
 ---
 
 ## Roadmap
 
+### Completed
+
 - [x] **Phase 1** — Core framework (Reactor, NBD, plugin system, mediator)
 - [x] **Phase 2A** — Multi-client TCP bridge with RAID01-inspired minions
-  - [x] Reactor-based multi-client support
-  - [x] Client reconnection
-  - [x] LIST_OFFSETS for offset enumeration
-  - [x] Persistent allocation metadata (`.tcp_allocations`)
-  - [x] RAID01-inspired layout across minions
-  - [x] Per-minion RWLock (N-way parallelism, no bottleneck)
-- [x] **Phase 2B** — Pluggable storage backends (partial)
-  - [x] IStorageMinion abstract interface
-  - [x] StorageMinionMemory (in-memory backend)
-  - [x] StorageMinionFile (disk-backed .img files with pread/pwrite)
-  - [x] Runtime backend selection via CLI (--backend memory|file)
-  - [x] Metadata persistence (raid_metadata.dat for FILE backend)
-  - [x] Swap backends without changing RAID/mediator logic
-  - [ ] Factory pattern for cleaner backend instantiation (future refactor)
-- [ ] **Phase 2C** — Additional backends
-  - [ ] StorageMinionNBD (Linux NBD over network)
-  - [ ] StorageMinionTCP (custom TCP-based remote minion)
-- [ ] **Phase 3** — Distributed nodes
-  - [ ] Minion daemon (standalone server exposing StorageMinion interface)
-  - [ ] Remote minion discovery and health checks
-  - [ ] Failover (read from mirror if primary unreachable)
-- [ ] **Phase 4** — Heterogeneous cluster
-  - [ ] Lightweight minion for Raspberry Pi
-  - [ ] Unified cluster API (any storage backend in same RAID group)
-  - [ ] Automatic replication to backup nodes
+- [x] **Phase 2B** — Pluggable storage backends with factory pattern
+
+### Planned
+
+- [ ] **Phase 2C** — Network-based minion transport
+  - [ ] RemoteStorageMinion abstraction for network backends
+  - [ ] TCP-based remote minion protocol
+  - [ ] RDMA support (if demand exists)
+
+- [ ] **Phase 3** — Distributed RAID controller
+  - [ ] Minion daemon exposing IStorageMinion interface
+  - [ ] Gossip-based minion discovery
+  - [ ] Consensus-based failover and mirror promotion
+
+### Exploratory (Research, not committed)
+
+- Optional: Raspberry Pi lightweight minion variant
+- Optional: End-to-end checksums (CRC32/SHA256 per-block)
+- Optional: Async mirror writes with eventual consistency option
+- Optional: Write-ahead log for metadata batching
+- Optional: Automatic mirror rebuild from backup nodes
