@@ -13,6 +13,7 @@ cmake_install.cmake
 # Binaries
 buse
 lds_app
+test_reactor
 
 # Logs
 log.txt
@@ -37,3 +38,10 @@ docs/
 !README.md
 *.html
 *.txt
+
+# Test files and client tools
+test_client.py
+test_persistence.sh
+connect_minions_to_nbd.sh
+clients.json
+.tcp_allocations

@@ -1,12 +1,11 @@
-
 #include <cstring>
+#include <fstream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cerrno>
 #include <endian.h>
-
 
 #include "TCPDriverComm.hpp"
 #include "logger.hpp"
@@ -20,7 +19,7 @@ TCPDriverError::TCPDriverError(const std::string& msg_)
 }
 
 TCPDriverComm::TCPDriverComm(int port_)
-    : m_listen_fd(-1), m_client_fd(-1)
+    : m_listen_fd(-1)
 {
     auto logger = Singleton<Logger>::GetInstance();
     logger->Write("TCPDriverComm: Initializing on port " + std::to_string(port_), Logger::INFO);
@@ -54,39 +53,34 @@ TCPDriverComm::TCPDriverComm(int port_)
     }
     logger->Write("Successfully bound to port " + std::to_string(port_), Logger::DEBUG);
 
-    if (listen(m_listen_fd, 1) < 0)
+    if (listen(m_listen_fd, 10) < 0)
     {
         logger->Write("Failed to listen: " + std::string(strerror(errno)), Logger::ERROR);
         close(m_listen_fd);
         throw TCPDriverError("Failed to listen: " + std::string(strerror(errno)));
     }
-    logger->Write("Listening for client connections", Logger::DEBUG);
+    logger->Write("Listening for client connections on port " + std::to_string(port_), Logger::INFO);
 
-    struct sockaddr_in client_addr;
-    socklen_t client_addr_len = sizeof(client_addr);
-    logger->Write("Waiting for client connection...", Logger::INFO);
-    m_client_fd = accept(m_listen_fd, (struct sockaddr*)&client_addr, &client_addr_len);
-    if (m_client_fd < 0)
-    {
-        logger->Write("Failed to accept connection: " + std::string(strerror(errno)), Logger::ERROR);
-        close(m_listen_fd);
-        throw TCPDriverError("Failed to accept connection: " + std::string(strerror(errno)));
-    }
-    logger->Write("Client connected from " + std::string(inet_ntoa(client_addr.sin_addr)), Logger::INFO);
-
-    close(m_listen_fd);
-    m_listen_fd = -1;
+    // Load persistent allocations from previous sessions
+    LoadAllocations();
 }
 
 TCPDriverComm::~TCPDriverComm()
 {
     auto logger = Singleton<Logger>::GetInstance();
-    if (m_client_fd >= 0)
+
+    // Close all client connections
     {
-        logger->Write("Closing client connection", Logger::DEBUG);
-        close(m_client_fd);
-        m_client_fd = -1;
+        std::lock_guard<std::mutex> lock(m_clients_lock);
+        for (int fd : m_client_fds)
+        {
+            logger->Write("Closing client fd " + std::to_string(fd), Logger::DEBUG);
+            close(fd);
+        }
+        m_client_fds.clear();
     }
+
+    // Close listen socket
     if (m_listen_fd >= 0)
     {
         logger->Write("Closing listen socket", Logger::DEBUG);
@@ -96,11 +90,64 @@ TCPDriverComm::~TCPDriverComm()
     logger->Write("TCPDriverComm destroyed", Logger::INFO);
 }
 
+int TCPDriverComm::GetFD()
+{
+    // Always return LISTEN_FD - Reactor monitors this
+    // When new connection arrives, Reactor calls AcceptNextClient()
+    // When client data arrives, Reactor passes fd to ReceiveRequest()
+    return m_listen_fd;
+}
+
+int TCPDriverComm::AcceptNextClient()
+{
+    auto logger = Singleton<Logger>::GetInstance();
+
+    struct sockaddr_in client_addr;
+    socklen_t client_addr_len = sizeof(client_addr);
+
+    int new_fd = accept(m_listen_fd, (struct sockaddr*)&client_addr, &client_addr_len);
+    if (new_fd < 0)
+    {
+        logger->Write("Failed to accept connection: " + std::string(strerror(errno)), Logger::ERROR);
+        return -1;
+    }
+
+    std::string client_ip = inet_ntoa(client_addr.sin_addr);
+
+    {
+        std::lock_guard<std::mutex> lock(m_clients_lock);
+        m_client_fds.insert(new_fd);
+    }
+
+    RecordClientIP(new_fd, client_ip);
+
+    logger->Write("Client connected from " + client_ip + " (fd=" + std::to_string(new_fd) + ")", Logger::INFO);
+
+    return new_fd;
+}
+
+void TCPDriverComm::RemoveClientFD(int fd)
+{
+    auto logger = Singleton<Logger>::GetInstance();
+
+    {
+        std::lock_guard<std::mutex> lock(m_clients_lock);
+        m_client_fds.erase(fd);
+    }
+
+    std::string ip = GetClientIP(fd);
+    ForgetClientIP(fd);
+
+    close(fd);
+    logger->Write("Client disconnected from " + ip + " (fd=" + std::to_string(fd) + ")", Logger::INFO);
+}
+
 void TCPDriverComm::ReadAll(int fd, void* buf, size_t count)
 {
     auto logger = Singleton<Logger>::GetInstance();
     char* ptr = static_cast<char*>(buf);
     size_t remaining = count;
+
     while (remaining > 0)
     {
         ssize_t n = read(fd, ptr, remaining);
@@ -124,6 +171,7 @@ void TCPDriverComm::WriteAll(int fd, const void* buf, size_t count)
     auto logger = Singleton<Logger>::GetInstance();
     const char* ptr = static_cast<const char*>(buf);
     size_t remaining = count;
+
     while (remaining > 0)
     {
         ssize_t n = write(fd, ptr, remaining);
@@ -142,9 +190,10 @@ void TCPDriverComm::WriteAll(int fd, const void* buf, size_t count)
     }
 }
 
-std::shared_ptr<DriverData> TCPDriverComm::ReceiveRequest()
+std::shared_ptr<DriverData> TCPDriverComm::ReceiveRequest(int fd)
 {
     auto logger = Singleton<Logger>::GetInstance();
+
     struct RequestHeader
     {
         uint32_t type;
@@ -154,7 +203,9 @@ std::shared_ptr<DriverData> TCPDriverComm::ReceiveRequest()
     } __attribute__((packed));
 
     RequestHeader header;
-    ReadAll(m_client_fd, &header, sizeof(header));
+    logger->Write("ReceiveRequest: Reading from fd=" + std::to_string(fd), Logger::DEBUG);
+
+    ReadAll(fd, &header, sizeof(header));
 
     uint32_t type = ntohl(header.type);
     uint64_t handle = be64toh(header.handle);
@@ -173,10 +224,13 @@ std::shared_ptr<DriverData> TCPDriverComm::ReceiveRequest()
         len
     );
 
+    ret->m_source_fd = fd;  // Store source FD for reply routing
+
     if (type == DriverData::WRITE)
     {
-        ReadAll(m_client_fd, ret->m_buffer.data(), len);
+        ReadAll(fd, ret->m_buffer.data(), len);
         UpdateAllocation(offset, ret->m_buffer);
+        SaveAllocations();  // Persist to disk after each write
         logger->Write("[WRITE] Received " + std::to_string(len) + " bytes at offset " +
                       std::to_string(offset) + " (handle=" + std::to_string(handle) + ")", Logger::INFO);
     }
@@ -192,6 +246,13 @@ std::shared_ptr<DriverData> TCPDriverComm::ReceiveRequest()
 void TCPDriverComm::SendReply(std::shared_ptr<DriverData> data_)
 {
     auto logger = Singleton<Logger>::GetInstance();
+
+    if (data_->m_source_fd < 0)
+    {
+        logger->Write("SendReply: Invalid source FD", Logger::ERROR);
+        return;
+    }
+
     struct ReplyHeader
     {
         uint32_t error;
@@ -215,52 +276,53 @@ void TCPDriverComm::SendReply(std::shared_ptr<DriverData> data_)
 
     const char* statusStr = (data_->m_status == DriverData::SUCCESS) ? "SUCCESS" : "ERROR";
     logger->Write("Sending reply: handle=" + std::to_string(data_->m_handle) + " status=" + statusStr +
-                  " len=" + std::to_string(ntohl(header.len)), Logger::DEBUG);
+                  " len=" + std::to_string(ntohl(header.len)) + " to fd=" + std::to_string(data_->m_source_fd), Logger::DEBUG);
 
-    WriteAll(m_client_fd, &header, sizeof(header));
-
-    if (data_->m_type == DriverData::READ && data_->m_status == DriverData::SUCCESS)
+    try
     {
-        auto alloc = GetAllocation(data_->m_offset);
-        if (!alloc.empty())
+        WriteAll(data_->m_source_fd, &header, sizeof(header));
+
+        if (data_->m_type == DriverData::READ && data_->m_status == DriverData::SUCCESS)
         {
-            WriteAll(m_client_fd, alloc.data(), alloc.size());
-            logger->Write("[READ] Sent " + std::to_string(alloc.size()) + " bytes from offset " +
-                          std::to_string(data_->m_offset) + " (handle=" + std::to_string(data_->m_handle) + ")", Logger::INFO);
+            auto alloc = GetAllocation(data_->m_offset);
+            if (!alloc.empty())
+            {
+                WriteAll(data_->m_source_fd, alloc.data(), alloc.size());
+                logger->Write("[READ] Sent " + std::to_string(alloc.size()) + " bytes from offset " +
+                              std::to_string(data_->m_offset) + " (handle=" + std::to_string(data_->m_handle) + ")", Logger::INFO);
+            }
+            else
+            {
+                logger->Write("[READ] No data found at offset " + std::to_string(data_->m_offset) +
+                              " (handle=" + std::to_string(data_->m_handle) + ")", Logger::INFO);
+            }
         }
-        else
+        else if (data_->m_type == DriverData::WRITE && data_->m_status == DriverData::SUCCESS)
         {
-            logger->Write("[READ] No data found at offset " + std::to_string(data_->m_offset) +
+            logger->Write("[WRITE] Confirmed write at offset " + std::to_string(data_->m_offset) +
                           " (handle=" + std::to_string(data_->m_handle) + ")", Logger::INFO);
         }
     }
-    else if (data_->m_type == DriverData::WRITE && data_->m_status == DriverData::SUCCESS)
+    catch (const std::exception& e)
     {
-        logger->Write("[WRITE] Confirmed write at offset " + std::to_string(data_->m_offset) +
-                      " (handle=" + std::to_string(data_->m_handle) + ")", Logger::INFO);
+        logger->Write("Failed to send reply: " + std::string(e.what()), Logger::ERROR);
+        // Client disconnected - will be cleaned up by Reactor
     }
 }
 
 void TCPDriverComm::Disconnect()
 {
     auto logger = Singleton<Logger>::GetInstance();
-    if (m_client_fd >= 0)
-    {
-        logger->Write("Disconnecting client", Logger::INFO);
-        close(m_client_fd);
-        m_client_fd = -1;
-    }
-}
-
-int TCPDriverComm::GetFD()
-{
-    return m_client_fd;
+    logger->Write("Disconnect called", Logger::DEBUG);
+    // Reactor will handle actual cleanup via RemoveClientFD
 }
 
 void TCPDriverComm::UpdateAllocation(size_t offset, const std::vector<char>& data)
 {
     std::lock_guard<std::mutex> lock(m_alloc_lock);
-    m_allocations[offset] = data;
+    // Append to existing data at offset (don't replace)
+    m_allocations[offset].insert(m_allocations[offset].end(),
+                                  data.begin(), data.end());
 }
 
 std::vector<char> TCPDriverComm::GetAllocation(size_t offset) const
@@ -272,6 +334,102 @@ std::vector<char> TCPDriverComm::GetAllocation(size_t offset) const
         return it->second;
     }
     return std::vector<char>();
+}
+
+std::string TCPDriverComm::GetClientIP(int fd) const
+{
+    std::lock_guard<std::mutex> lock(m_fd_to_ip_lock);
+    auto it = m_fd_to_ip.find(fd);
+    if (it != m_fd_to_ip.end())
+    {
+        return it->second;
+    }
+    return "";
+}
+
+void TCPDriverComm::RecordClientIP(int fd, const std::string& ip)
+{
+    std::lock_guard<std::mutex> lock(m_fd_to_ip_lock);
+    m_fd_to_ip[fd] = ip;
+}
+
+void TCPDriverComm::ForgetClientIP(int fd)
+{
+    std::lock_guard<std::mutex> lock(m_fd_to_ip_lock);
+    m_fd_to_ip.erase(fd);
+}
+
+int TCPDriverComm::TryAccept(int fd)
+{
+    if (fd != m_listen_fd)
+    {
+        return -1;  // Not the listen fd, let mediator handle as normal request
+    }
+
+    // New connection ready on listen socket, accept it
+    return AcceptNextClient();
+}
+
+void TCPDriverComm::SaveAllocations()
+{
+    auto logger = Singleton<Logger>::GetInstance();
+    std::lock_guard<std::mutex> lock(m_alloc_lock);
+
+    std::ofstream file(".tcp_allocations", std::ios::binary);
+    if (!file.is_open())
+    {
+        logger->Write("Failed to open allocations file for writing", Logger::ERROR);
+        return;
+    }
+
+    for (const auto& [offset, data] : m_allocations)
+    {
+        uint64_t off = htobe64(offset);
+        uint64_t size = htobe64(data.size());
+        file.write(reinterpret_cast<const char*>(&off), sizeof(off));
+        file.write(reinterpret_cast<const char*>(&size), sizeof(size));
+        file.write(data.data(), data.size());
+    }
+
+    file.close();
+    logger->Write("Allocations saved to disk (" + std::to_string(m_allocations.size()) + " offsets)", Logger::DEBUG);
+}
+
+void TCPDriverComm::LoadAllocations()
+{
+    auto logger = Singleton<Logger>::GetInstance();
+    std::lock_guard<std::mutex> lock(m_alloc_lock);
+
+    std::ifstream file(".tcp_allocations", std::ios::binary);
+    if (!file.is_open())
+    {
+        logger->Write("No saved allocations found (first run)", Logger::INFO);
+        return;
+    }
+
+    uint64_t count = 0;
+    while (file.good())
+    {
+        uint64_t off_bytes, size_bytes;
+        file.read(reinterpret_cast<char*>(&off_bytes), sizeof(off_bytes));
+        if (!file.good()) break;
+
+        file.read(reinterpret_cast<char*>(&size_bytes), sizeof(size_bytes));
+        if (!file.good()) break;
+
+        uint64_t offset = be64toh(off_bytes);
+        uint64_t size = be64toh(size_bytes);
+
+        std::vector<char> data(size);
+        file.read(data.data(), size);
+        if (!file.good() && !file.eof()) break;
+
+        m_allocations[offset] = data;
+        count++;
+    }
+
+    file.close();
+    logger->Write("Loaded " + std::to_string(count) + " offsets from disk", Logger::INFO);
 }
 
 } // namespace hrd41

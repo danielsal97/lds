@@ -31,11 +31,14 @@ public:
 
   ~NBDDriverComm() override;
 
-  std::shared_ptr<DriverData> ReceiveRequest() override;       // DriverError
-  void SendReply(std::shared_ptr<DriverData> data_) override; // DriverError
-  void Disconnect() override;                                  // DriverError
+  std::shared_ptr<DriverData> ReceiveRequest(int fd) override;  // DriverError
+  void SendReply(std::shared_ptr<DriverData> data_) override;   // DriverError
+  void Disconnect() override;                                    // DriverError
 
   int GetFD() override;
+  void AddClientFD(int fd) override { }     // NBD: no-op (single client)
+  void RemoveClientFD(int fd) override { }  // NBD: no-op (single client)
+  int TryAccept(int fd) override { return -1; }  // NBD: always -1 (single client)
 
 private:
   int m_nbdFd;

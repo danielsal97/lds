@@ -27,8 +27,9 @@ private:
 InputMediator::InputMediator(
     IDriverComm* driver,
     IStorage* storage,
-    ThreadPool* pool)
-    : m_driver(driver), m_storage(storage), m_pool(pool)
+    ThreadPool* pool,
+    Reactor* reactor)
+    : m_driver(driver), m_storage(storage), m_pool(pool), m_reactor(reactor)
 {
     SetupHandlers();
 }
@@ -68,20 +69,33 @@ void InputMediator::SetupHandlers()
 
 void InputMediator::Notify(int fd)
 {
-    (void)fd;
+    // Check if this is a new connection event (listen_fd ready)
+    int new_client_fd = m_driver->TryAccept(fd);
+    if (new_client_fd >= 0)
+    {
+        // New TCP client connected, add it to Reactor for future events
+        m_reactor->Add(new_client_fd);
+        return;
+    }
 
-    auto request = m_driver->ReceiveRequest();
-    
-    auto cmd = std::make_shared<FunctionCommand>(
+    // Regular client request - fd is a client socket ready for data
+    try
+    {
+        auto request = m_driver->ReceiveRequest(fd);
 
-        [this, request]() {
+        auto cmd = std::make_shared<FunctionCommand>(
+            [this, request]() {
+                m_handlers.at(request->m_type)(request);
+            }
+        );
 
-            m_handlers.at(request->m_type)(request);
-
-        }
-
-    );
-
-    m_pool->AddCommand(cmd);
+        m_pool->AddCommand(cmd);
+    }
+    catch (const std::exception& e)
+    {
+        // Client disconnected or read failed - clean up
+        m_reactor->Remove(fd);
+        m_driver->RemoveClientFD(fd);
+    }
 }
 } // namespace hrd41

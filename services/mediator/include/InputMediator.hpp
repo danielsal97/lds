@@ -19,6 +19,7 @@
 #include "IDriverComm.hpp"
 #include "IStorage.hpp"
 #include "thread_pool.hpp"
+#include "reactor.hpp"
 
 namespace hrd41
 {
@@ -29,7 +30,7 @@ struct DriverData;
 class InputMediator : public IMediator
 {
 public:
-  explicit InputMediator(IDriverComm* driver, IStorage* storage, ThreadPool* pool);
+  explicit InputMediator(IDriverComm* driver, IStorage* storage, ThreadPool* pool, Reactor* reactor);
 
   InputMediator(const InputMediator& o_) = delete;
   InputMediator& operator=(const InputMediator& o_) = delete;
@@ -41,6 +42,7 @@ private:
   IDriverComm* m_driver;
   IStorage* m_storage;
   ThreadPool* m_pool;
+  Reactor* m_reactor;
 
   std::map<int, std::function<void(std::shared_ptr<DriverData>)>> m_handlers;
 

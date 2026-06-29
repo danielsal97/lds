@@ -24,11 +24,14 @@ public:
   IDriverComm& operator=(const IDriverComm& o_) = delete;
   virtual ~IDriverComm() = default;
 
-  virtual std::shared_ptr<DriverData> ReceiveRequest() = 0;
+  virtual std::shared_ptr<DriverData> ReceiveRequest(int fd) = 0;  // fd is ready for I/O
   virtual void
   SendReply(std::shared_ptr<DriverData> data_) = 0; // throw IOExcepton
   virtual void Disconnect() = 0;
   virtual int GetFD() = 0; // epoll use only
+  virtual void AddClientFD(int fd) = 0; // TCP: register new client (called by Reactor)
+  virtual void RemoveClientFD(int fd) = 0; // TCP: unregister client on disconnect
+  virtual int TryAccept(int fd) = 0; // TCP: if fd==listen_fd, accept and return new client fd; else -1
 };
 
 class DriverError : public std::runtime_error

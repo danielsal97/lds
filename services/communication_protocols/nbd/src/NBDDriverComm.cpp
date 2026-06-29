@@ -156,10 +156,10 @@ NBDDriverComm::~NBDDriverComm() { Disconnect(); }
 
 // -------------------- ReceiveRequest ------------------
 
-std::shared_ptr<DriverData> NBDDriverComm::ReceiveRequest()
+std::shared_ptr<DriverData> NBDDriverComm::ReceiveRequest(int fd)
 {
   struct nbd_request request;
-  ReadAll(m_serverFd, &request, sizeof(request));
+  ReadAll(m_serverFd, &request, sizeof(request));  // NBD: ignore fd param, use m_serverFd
 
   uint32_t magic = ntohl(request.magic);
   if (magic != NBD_REQUEST_MAGIC)
@@ -198,6 +198,7 @@ std::shared_ptr<DriverData> NBDDriverComm::ReceiveRequest()
   }
 
   std::shared_ptr<DriverData> ret(new DriverData(action, handle, from, len));
+  ret->m_source_fd = fd;  // Store source FD for reply routing
 
   if (action == DriverData::WRITE)
   {

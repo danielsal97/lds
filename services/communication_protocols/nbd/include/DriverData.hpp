@@ -45,6 +45,7 @@ struct DriverData
   size_t m_len;
   StatusType m_status;
   std::vector<char> m_buffer;
+  int m_source_fd;   // FD this request came from (for TCP multi-client)
 };
 
 } // namespace hrd41

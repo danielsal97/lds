@@ -3,7 +3,7 @@
 #include <string>
 #include <stdexcept>
 
-#include "RAIDManager.hpp"
+#include "LocalStorage.hpp"
 #include "NBDDriverComm.hpp"
 #include "TCPDriverComm.hpp"
 #include "InputMediator.hpp"
@@ -20,13 +20,10 @@ void PrintUsage(const char* prog)
 {
     std::cerr << "Usage: " << prog << " <mode> [options]\n\n"
               << "Modes:\n"
-              << "  nbd <nbd-device> <size-bytes> [num-minions] [minion-size-mb]\n"
-              << "    Example: " << prog << " nbd /dev/nbd0 134217728\n"
-              << "    Example: " << prog << " nbd /dev/nbd0 134217728 4 10\n\n"
-              << "  tcp <port> <size-bytes> [num-minions] [minion-size-mb]\n"
-              << "    Example: " << prog << " tcp 9999 134217728\n"
-              << "    Example: " << prog << " tcp 9999 134217728 4 10\n"
-              << "  Default: num-minions = CPU cores, minion-size = 5 MB\n";
+              << "  nbd <nbd-device> <size-bytes>\n"
+              << "    Example: " << prog << " nbd /dev/nbd0 134217728\n\n"
+              << "  tcp <port> <size-bytes>\n"
+              << "    Example: " << prog << " tcp 9999 134217728\n";
 }
 
 size_t ParseSize(const char* value)
@@ -40,11 +37,11 @@ int ParsePort(const char* value)
 }
 
 template <typename Driver>
-void RunServer(Driver& driver, IStorage& storage)
+void RunServer(Driver& driver, LocalStorage& storage)
 {
     ThreadPool pool;
-    InputMediator mediator(&driver, &storage, &pool);
     Reactor reactor;
+    InputMediator mediator(&driver, &storage, &pool, &reactor);
     PNP pnp("plugins/");
 
     reactor.Add(driver.GetFD());
@@ -55,31 +52,25 @@ void RunServer(Driver& driver, IStorage& storage)
     reactor.Run();
 }
 
-int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0,
-               size_t minion_size = 5 * 1024 * 1024)
+int RunNBDMode(const std::string& device, size_t size)
 {
-    RAIDStorage storage(num_minions, minion_size);
+    LocalStorage storage(size);
     NBDDriverComm driver(device, size);
 
     std::cout << "LDS: NBD mode - serving "
               << size << " bytes on " << device << '\n';
-    std::cout << "LDS: RAID 01 storage - " << storage.GetNumMinions()
-              << " minions (" << storage.GetMinionsPerSet() << " per set)\n";
 
     RunServer(driver, storage);
     return 0;
 }
 
-int RunTCPMode(int port, size_t size, size_t num_minions = 0,
-               size_t minion_size = 5 * 1024 * 1024)
+int RunTCPMode(int port, size_t size)
 {
-    RAIDStorage storage(num_minions, minion_size);
+    LocalStorage storage(size);
     TCPDriverComm driver(port);
 
     std::cout << "LDS: TCP mode - listening on port "
               << port << " (" << size << " bytes storage)\n";
-    std::cout << "LDS: RAID 01 storage - " << storage.GetNumMinions()
-              << " minions (" << storage.GetMinionsPerSet() << " per set)\n";
 
     std::cout << "LDS: Waiting for client connection...\n";
 
@@ -105,19 +96,7 @@ int DispatchMode(int argc, char* argv[])
             return 1;
         }
 
-        size_t num_minions = 0;               // Default to hw_concurrency
-        size_t minion_size = 5 * 1024 * 1024; // Default 5MB
-
-        if (argc >= 5)
-        {
-            num_minions = ParseSize(argv[4]);
-        }
-        if (argc >= 6)
-        {
-            minion_size = ParseSize(argv[5]) * 1024 * 1024; // Convert MB to bytes
-        }
-
-        return RunNBDMode(argv[2], ParseSize(argv[3]), num_minions, minion_size);
+        return RunNBDMode(argv[2], ParseSize(argv[3]));
     }
 
     if (mode == "tcp")
@@ -128,20 +107,7 @@ int DispatchMode(int argc, char* argv[])
             return 1;
         }
 
-        size_t num_minions = 0;               // Default to hw_concurrency
-        size_t minion_size = 5 * 1024 * 1024; // Default 5MB
-
-        if (argc >= 5)
-        {
-            num_minions = ParseSize(argv[4]);
-        }
-        if (argc >= 6)
-        {
-            minion_size = ParseSize(argv[5]) * 1024 * 1024; // Convert MB to bytes
-        }
-
-        return RunTCPMode(ParsePort(argv[2]), ParseSize(argv[3]), num_minions,
-                         minion_size);
+        return RunTCPMode(ParsePort(argv[2]), ParseSize(argv[3]));
     }
 
     PrintUsage(argv[0]);
