@@ -12,6 +12,9 @@
 
 #include <memory>
 #include <vector>
+#include <map>
+#include <shared_mutex>
+
 #include "IStorage.hpp"
 #include "StorageMinion.hpp"
 
@@ -21,25 +24,30 @@ namespace hrd41
 class RAIDStorage : public IStorage
 {
 public:
-    // num_minions defaults to hardware_concurrency, minion_size defaults to 5MB
-    explicit RAIDStorage(size_t num_minions = 0,
+    explicit RAIDStorage(size_t num_minions = 4,
                          size_t minion_size = 5 * 1024 * 1024);
+
     RAIDStorage(const RAIDStorage&) = delete;
     RAIDStorage& operator=(const RAIDStorage&) = delete;
-    ~RAIDStorage() = default;
+    ~RAIDStorage() override = default;
 
     void Read(std::shared_ptr<DriverData> data_) override;
     void Write(std::shared_ptr<DriverData> data_) override;
     size_t GetDataSize(size_t offset_) const override;
+    std::vector<std::pair<size_t, size_t>> ListOffsets() const override;
 
-    size_t GetNumMinions() const { return m_minions.size(); }
-    size_t GetMinionsPerSet() const { return m_num_primary; }
+    size_t GetNumMinions() const;
+    size_t GetMinionsPerSet() const;
 
 private:
     std::vector<std::unique_ptr<StorageMinion>> m_minions;
-    size_t m_stripe_size;      // bytes per stripe chunk
-    size_t m_num_primary;      // N/2 (number of primary minions)
-    size_t m_minion_size;      // size of each minion
+
+    size_t m_stripe_size;
+    size_t m_num_primary;
+    size_t m_minion_size;
+
+    std::map<size_t, size_t> m_offset_sizes;
+    mutable std::shared_mutex m_offsets_lock;
 
     size_t PrimaryIndex(size_t offset) const;
     size_t MirrorIndex(size_t primary_idx) const;

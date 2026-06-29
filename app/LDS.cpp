@@ -3,7 +3,7 @@
 #include <string>
 #include <stdexcept>
 
-#include "LocalStorage.hpp"
+#include "RAIDManager.hpp"
 #include "NBDDriverComm.hpp"
 #include "TCPDriverComm.hpp"
 #include "InputMediator.hpp"
@@ -20,10 +20,11 @@ void PrintUsage(const char* prog)
 {
     std::cerr << "Usage: " << prog << " <mode> [options]\n\n"
               << "Modes:\n"
-              << "  nbd <nbd-device> <size-bytes>\n"
-              << "    Example: " << prog << " nbd /dev/nbd0 134217728\n\n"
-              << "  tcp <port> <size-bytes>\n"
-              << "    Example: " << prog << " tcp 9999 134217728\n";
+              << "  nbd <nbd-device> <size-bytes> [num-minions]\n"
+              << "    Example: " << prog << " nbd /dev/nbd0 134217728 4\n\n"
+              << "  tcp <port> <size-bytes> [num-minions]\n"
+              << "    Example: " << prog << " tcp 9999 134217728 4\n\n"
+              << "  [num-minions] defaults to hardware_concurrency if not specified\n";
 }
 
 size_t ParseSize(const char* value)
@@ -37,7 +38,7 @@ int ParsePort(const char* value)
 }
 
 template <typename Driver>
-void RunServer(Driver& driver, LocalStorage& storage)
+void RunServer(Driver& driver, IStorage& storage)
 {
     ThreadPool pool;
     Reactor reactor;
@@ -52,9 +53,9 @@ void RunServer(Driver& driver, LocalStorage& storage)
     reactor.Run();
 }
 
-int RunNBDMode(const std::string& device, size_t size)
+int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0)
 {
-    LocalStorage storage(size);
+    RAIDStorage storage(num_minions, size);
     NBDDriverComm driver(device, size);
 
     std::cout << "LDS: NBD mode - serving "
@@ -64,9 +65,9 @@ int RunNBDMode(const std::string& device, size_t size)
     return 0;
 }
 
-int RunTCPMode(int port, size_t size)
+int RunTCPMode(int port, size_t size, size_t num_minions = 0)
 {
-    LocalStorage storage(size);
+    RAIDStorage storage(num_minions, size);
     TCPDriverComm driver(port);
 
     std::cout << "LDS: TCP mode - listening on port "
@@ -96,7 +97,8 @@ int DispatchMode(int argc, char* argv[])
             return 1;
         }
 
-        return RunNBDMode(argv[2], ParseSize(argv[3]));
+        size_t num_minions = (argc >= 5) ? ParseSize(argv[4]) : 0;
+        return RunNBDMode(argv[2], ParseSize(argv[3]), num_minions);
     }
 
     if (mode == "tcp")
@@ -107,7 +109,8 @@ int DispatchMode(int argc, char* argv[])
             return 1;
         }
 
-        return RunTCPMode(ParsePort(argv[2]), ParseSize(argv[3]));
+        size_t num_minions = (argc >= 5) ? ParseSize(argv[4]) : 0;
+        return RunTCPMode(ParsePort(argv[2]), ParseSize(argv[3]), num_minions);
     }
 
     PrintUsage(argv[0]);

@@ -260,32 +260,50 @@ void TCPDriverComm::SendReply(std::shared_ptr<DriverData> data_)
         uint32_t len;
     } __attribute__((packed));
 
+    // Compute reply length and whether to send payload based on request type
+    uint32_t reply_len = 0;
+    bool send_payload = false;
+
+    if (data_->m_status == DriverData::SUCCESS)
+    {
+        switch (data_->m_type)
+        {
+            case DriverData::READ:
+            case DriverData::LIST_OFFSETS:
+                reply_len = data_->m_buffer.size();
+                send_payload = !data_->m_buffer.empty();
+                break;
+
+            case DriverData::GET_SIZE:
+                reply_len = data_->m_len;  // Size is in header, not payload
+                send_payload = false;
+                break;
+
+            case DriverData::WRITE:
+            case DriverData::FLUSH:
+            case DriverData::TRIM:
+            case DriverData::DISCONNECT:
+            default:
+                reply_len = 0;
+                send_payload = false;
+                break;
+        }
+    }
+
     ReplyHeader header;
     header.error = htonl(data_->m_status == DriverData::SUCCESS ? 0 : EIO);
     header.handle = htobe64(data_->m_handle);
-
-    // For GET_SIZE, use m_len (set by InputMediator handler); for others, use m_buffer.size()
-    if (data_->m_type == DriverData::GET_SIZE)
-    {
-        header.len = htonl(data_->m_len);
-    }
-    else
-    {
-        header.len = htonl(data_->m_buffer.size());
-    }
+    header.len = htonl(reply_len);
 
     const char* statusStr = (data_->m_status == DriverData::SUCCESS) ? "SUCCESS" : "ERROR";
-    uint32_t payload_len = (data_->m_type == DriverData::GET_SIZE) ? data_->m_len : data_->m_buffer.size();
     logger->Write("Sending reply: handle=" + std::to_string(data_->m_handle) + " status=" + statusStr +
-                  " len=" + std::to_string(payload_len) + " to fd=" + std::to_string(data_->m_source_fd), Logger::DEBUG);
+                  " len=" + std::to_string(reply_len) + " to fd=" + std::to_string(data_->m_source_fd), Logger::DEBUG);
 
     try
     {
         WriteAll(data_->m_source_fd, &header, sizeof(header));
 
-        // Send payload only for types that need it
-        if (data_->m_status == DriverData::SUCCESS && !data_->m_buffer.empty() &&
-            (data_->m_type == DriverData::READ || data_->m_type == DriverData::LIST_OFFSETS))
+        if (send_payload)
         {
             WriteAll(data_->m_source_fd, data_->m_buffer.data(), data_->m_buffer.size());
 

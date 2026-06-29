@@ -212,28 +212,33 @@ CMakeFiles/lds_app.dir/app/LDS.cpp.o: app/LDS.cpp \
   /usr/include/c++/11/backward/auto_ptr.h \
   /usr/include/c++/11/pstl/glue_memory_defs.h \
   /usr/include/c++/11/pstl/execution_defs.h \
-  services/local_storage/include/LocalStorage.hpp \
-  /usr/include/c++/11/mutex \
-  /usr/include/c++/11/chrono \
-  /usr/include/c++/11/ratio \
-  /usr/include/c++/11/limits \
-  /usr/include/c++/11/ctime \
-  /usr/include/c++/11/bits/parse_numbers.h \
-  /usr/include/c++/11/bits/std_mutex.h \
-  /usr/include/c++/11/bits/unique_lock.h \
+  services/local_storage/include/RAIDManager.hpp \
+  /usr/include/c++/11/vector \
+  /usr/include/c++/11/bits/stl_vector.h \
+  /usr/include/c++/11/bits/stl_bvector.h \
+  /usr/include/c++/11/bits/vector.tcc \
   /usr/include/c++/11/map \
   /usr/include/c++/11/bits/stl_tree.h \
   /usr/include/c++/11/bits/node_handle.h \
   /usr/include/c++/11/bits/stl_map.h \
   /usr/include/c++/11/bits/stl_multimap.h \
   /usr/include/c++/11/bits/erase_if.h \
+  /usr/include/c++/11/shared_mutex \
+  /usr/include/c++/11/chrono \
+  /usr/include/c++/11/ratio \
+  /usr/include/c++/11/limits \
+  /usr/include/c++/11/ctime \
+  /usr/include/c++/11/bits/parse_numbers.h \
+  /usr/include/c++/11/bits/std_mutex.h \
   services/local_storage/include/IStorage.hpp \
-  /usr/include/c++/11/vector \
-  /usr/include/c++/11/bits/stl_vector.h \
-  /usr/include/c++/11/bits/stl_bvector.h \
-  /usr/include/c++/11/bits/vector.tcc \
   services/communication_protocols/nbd/include/DriverData.hpp \
   /usr/include/c++/11/cstddef \
+  services/local_storage/include/StorageMinion.hpp \
+  /usr/include/c++/11/cstring \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
   services/communication_protocols/nbd/include/NBDDriverComm.hpp \
   /usr/include/c++/11/thread \
   /usr/include/c++/11/bits/std_thread.h \
@@ -244,6 +249,8 @@ CMakeFiles/lds_app.dir/app/LDS.cpp.o: app/LDS.cpp \
   /usr/include/c++/11/set \
   /usr/include/c++/11/bits/stl_set.h \
   /usr/include/c++/11/bits/stl_multiset.h \
+  /usr/include/c++/11/mutex \
+  /usr/include/c++/11/bits/unique_lock.h \
   services/communication_protocols/nbd/include/IDriverComm.hpp \
   services/mediator/include/InputMediator.hpp \
   /usr/include/c++/11/functional \
@@ -303,8 +310,6 @@ CMakeFiles/lds_app.dir/app/LDS.cpp.o: app/LDS.cpp \
 
 design_patterns/observer/include/CallBack.hpp:
 
-plugins/include/soLoader.hpp:
-
 /usr/include/c++/11/algorithm:
 
 design_patterns/observer/include/Dispatcher.hpp:
@@ -347,6 +352,10 @@ design_patterns/reactor/include/reactor.hpp:
 
 design_patterns/command/include/ICommand.hpp:
 
+utilities/threading/thread_pool/include/thread_pool.hpp:
+
+/usr/include/c++/11/bits/stl_algo.h:
+
 /usr/include/c++/11/bits/cxxabi_forced.h:
 
 /usr/include/x86_64-linux-gnu/bits/endian.h:
@@ -362,6 +371,8 @@ design_patterns/command/include/ICommand.hpp:
 /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
+
+/usr/include/strings.h:
 
 /usr/include/c++/11/bits/basic_string.h:
 
@@ -565,6 +576,10 @@ services/communication_protocols/nbd/include/IDriverComm.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
+/usr/include/c++/11/bits/algorithmfwd.h:
+
+/usr/include/c++/11/pstl/execution_defs.h:
+
 /usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h:
@@ -601,6 +616,8 @@ plugins/include/pnp.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
 
+/usr/include/x86_64-linux-gnu/bits/strings_fortified.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h:
 
 /usr/include/unistd.h:
@@ -610,8 +627,6 @@ plugins/include/pnp.hpp:
 /usr/include/c++/11/bits/nested_exception.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
 /usr/include/c++/11/bits/std_function.h:
 
@@ -626,6 +641,10 @@ plugins/include/pnp.hpp:
 services/local_storage/include/IStorage.hpp:
 
 /usr/include/c++/11/bits/stl_iterator_base_types.h:
+
+services/mediator/include/IMediator.hpp:
+
+/usr/include/c++/11/cstdlib:
 
 /usr/include/c++/11/bit:
 
@@ -666,10 +685,6 @@ services/local_storage/include/IStorage.hpp:
 /usr/include/c++/11/bits/hash_bytes.h:
 
 /usr/include/c++/11/bits/string_view.tcc:
-
-/usr/include/c++/11/cstdlib:
-
-services/mediator/include/IMediator.hpp:
 
 /usr/include/c++/11/iosfwd:
 
@@ -717,7 +732,13 @@ services/communication_protocols/tcp/include/TCPDriverComm.hpp:
 
 /usr/include/c++/11/cwctype:
 
+/usr/include/c++/11/bits/stl_heap.h:
+
+/usr/include/c++/11/bits/std_abs.h:
+
 /usr/include/c++/11/cstdio:
+
+services/local_storage/include/RAIDManager.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
@@ -767,6 +788,10 @@ services/communication_protocols/tcp/include/TCPDriverComm.hpp:
 
 /usr/include/c++/11/bits/stl_vector.h:
 
+plugins/include/soLoader.hpp:
+
+services/local_storage/include/StorageMinion.hpp:
+
 /usr/include/c++/11/ios:
 
 /usr/include/c++/11/utility:
@@ -776,6 +801,8 @@ services/communication_protocols/tcp/include/TCPDriverComm.hpp:
 /usr/include/c++/11/pstl/glue_algorithm_defs.h:
 
 /usr/include/c++/11/stdexcept:
+
+/usr/include/string.h:
 
 /usr/include/c++/11/bits/streambuf.tcc:
 
@@ -796,6 +823,8 @@ services/communication_protocols/tcp/include/TCPDriverComm.hpp:
 /usr/include/c++/11/istream:
 
 /usr/include/c++/11/bits/istream.tcc:
+
+/usr/include/x86_64-linux-gnu/bits/string_fortified.h:
 
 /usr/include/c++/11/memory:
 
@@ -823,19 +852,15 @@ design_patterns/observer/include/ICallBack.hpp:
 
 /usr/include/c++/11/bits/parse_numbers.h:
 
-/usr/include/c++/11/condition_variable:
+/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
 
-/usr/include/c++/11/thread:
+/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
 
-services/local_storage/include/LocalStorage.hpp:
+/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
 
-/usr/include/c++/11/ratio:
+/usr/include/c++/11/bits/stl_bvector.h:
 
-/usr/include/c++/11/limits:
-
-/usr/include/c++/11/bits/uses_allocator.h:
-
-/usr/include/c++/11/bits/unique_lock.h:
+/usr/include/c++/11/bits/vector.tcc:
 
 /usr/include/c++/11/bits/stl_map.h:
 
@@ -847,15 +872,19 @@ services/local_storage/include/LocalStorage.hpp:
 
 /usr/include/c++/11/bits/erase_if.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
+/usr/include/c++/11/condition_variable:
 
-/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
+/usr/include/c++/11/thread:
 
-/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
+/usr/include/c++/11/ratio:
 
-/usr/include/c++/11/bits/stl_bvector.h:
+/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
-/usr/include/c++/11/bits/vector.tcc:
+/usr/include/c++/11/cstring:
+
+/usr/include/c++/11/limits:
+
+/usr/include/c++/11/shared_mutex:
 
 services/communication_protocols/nbd/include/NBDDriverComm.hpp:
 
@@ -867,6 +896,10 @@ services/communication_protocols/nbd/include/NBDDriverComm.hpp:
 
 /usr/include/c++/11/bits/stl_multiset.h:
 
+/usr/include/c++/11/bits/uses_allocator.h:
+
+/usr/include/c++/11/bits/unique_lock.h:
+
 /usr/include/c++/11/bits/hashtable.h:
 
 /usr/include/c++/11/bits/hashtable_policy.h:
@@ -876,15 +909,3 @@ services/communication_protocols/nbd/include/NBDDriverComm.hpp:
 /usr/include/c++/11/bits/basic_ios.tcc:
 
 /usr/include/c++/11/bits/enable_special_members.h:
-
-/usr/include/c++/11/bits/stl_algo.h:
-
-/usr/include/c++/11/pstl/execution_defs.h:
-
-/usr/include/c++/11/bits/algorithmfwd.h:
-
-utilities/threading/thread_pool/include/thread_pool.hpp:
-
-/usr/include/c++/11/bits/std_abs.h:
-
-/usr/include/c++/11/bits/stl_heap.h:
