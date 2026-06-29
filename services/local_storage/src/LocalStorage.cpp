@@ -50,4 +50,15 @@ size_t LocalStorage::GetDataSize(size_t offset_) const
     return 0;
 }
 
+std::vector<std::pair<size_t, size_t>> LocalStorage::ListOffsets() const
+{
+    std::lock_guard<std::mutex> lock(m_lock);
+    std::vector<std::pair<size_t, size_t>> result;
+    for (const auto& [offset, size] : m_offset_sizes)
+    {
+        result.push_back({offset, size});
+    }
+    return result;
+}
+
 } // namespace hrd41

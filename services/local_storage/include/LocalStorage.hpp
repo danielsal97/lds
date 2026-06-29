@@ -29,7 +29,8 @@ public:
 
     void Read(std::shared_ptr<DriverData> data_) override;  //throw StorageError
     void Write(std::shared_ptr<DriverData> data_) override;  //throw StorageError
-    size_t GetDataSize(size_t offset_) const;
+    size_t GetDataSize(size_t offset_) const override;
+    std::vector<std::pair<size_t, size_t>> ListOffsets() const override;
 
 private:
     std::vector<char> m_storage;

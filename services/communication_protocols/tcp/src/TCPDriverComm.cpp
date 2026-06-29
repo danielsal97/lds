@@ -264,38 +264,45 @@ void TCPDriverComm::SendReply(std::shared_ptr<DriverData> data_)
     header.error = htonl(data_->m_status == DriverData::SUCCESS ? 0 : EIO);
     header.handle = htobe64(data_->m_handle);
 
+    // For GET_SIZE, use m_len (set by InputMediator handler); for others, use m_buffer.size()
     if (data_->m_type == DriverData::GET_SIZE)
     {
-        auto alloc = GetAllocation(data_->m_offset);
-        header.len = htonl(alloc.size());
+        header.len = htonl(data_->m_len);
     }
     else
     {
-        header.len = htonl(0);
+        header.len = htonl(data_->m_buffer.size());
     }
 
     const char* statusStr = (data_->m_status == DriverData::SUCCESS) ? "SUCCESS" : "ERROR";
+    uint32_t payload_len = (data_->m_type == DriverData::GET_SIZE) ? data_->m_len : data_->m_buffer.size();
     logger->Write("Sending reply: handle=" + std::to_string(data_->m_handle) + " status=" + statusStr +
-                  " len=" + std::to_string(ntohl(header.len)) + " to fd=" + std::to_string(data_->m_source_fd), Logger::DEBUG);
+                  " len=" + std::to_string(payload_len) + " to fd=" + std::to_string(data_->m_source_fd), Logger::DEBUG);
 
     try
     {
         WriteAll(data_->m_source_fd, &header, sizeof(header));
 
-        if (data_->m_type == DriverData::READ && data_->m_status == DriverData::SUCCESS)
+        // Send payload only for types that need it
+        if (data_->m_status == DriverData::SUCCESS && !data_->m_buffer.empty() &&
+            (data_->m_type == DriverData::READ || data_->m_type == DriverData::LIST_OFFSETS))
         {
-            auto alloc = GetAllocation(data_->m_offset);
-            if (!alloc.empty())
+            WriteAll(data_->m_source_fd, data_->m_buffer.data(), data_->m_buffer.size());
+
+            if (data_->m_type == DriverData::READ)
             {
-                WriteAll(data_->m_source_fd, alloc.data(), alloc.size());
-                logger->Write("[READ] Sent " + std::to_string(alloc.size()) + " bytes from offset " +
+                logger->Write("[READ] Sent " + std::to_string(data_->m_buffer.size()) + " bytes from offset " +
                               std::to_string(data_->m_offset) + " (handle=" + std::to_string(data_->m_handle) + ")", Logger::INFO);
             }
-            else
+            else if (data_->m_type == DriverData::LIST_OFFSETS)
             {
-                logger->Write("[READ] No data found at offset " + std::to_string(data_->m_offset) +
-                              " (handle=" + std::to_string(data_->m_handle) + ")", Logger::INFO);
+                logger->Write("[LIST_OFFSETS] Sent " + std::to_string(data_->m_buffer.size()) + " bytes of offset list", Logger::INFO);
             }
+        }
+        else if (data_->m_type == DriverData::GET_SIZE && data_->m_status == DriverData::SUCCESS)
+        {
+            logger->Write("[GET_SIZE] Offset " + std::to_string(data_->m_offset) + " has " + std::to_string(data_->m_len) +
+                          " bytes (handle=" + std::to_string(data_->m_handle) + ")", Logger::INFO);
         }
         else if (data_->m_type == DriverData::WRITE && data_->m_status == DriverData::SUCCESS)
         {

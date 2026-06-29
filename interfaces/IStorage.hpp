@@ -12,6 +12,8 @@
 
 #include <memory> //shared_ptr
 #include <stdexcept> // runtime_error
+#include <vector>
+#include <utility>
 
 #include "DriverData.hpp"
 
@@ -29,6 +31,7 @@ public:
     virtual void Read(std::shared_ptr<DriverData> data_) = 0;  //throw StorageError
     virtual void Write(std::shared_ptr<DriverData> data_) = 0; //throw StorageError
     virtual size_t GetDataSize(size_t offset_) const = 0;
+    virtual std::vector<std::pair<size_t, size_t>> ListOffsets() const = 0;
 
 private:
     size_t size_;

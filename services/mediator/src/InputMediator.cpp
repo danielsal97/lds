@@ -3,6 +3,7 @@
 #include "IDriverComm.hpp"
 #include "IStorage.hpp"
 #include "DriverData.hpp"
+#include <endian.h>
 
 namespace hrd41
 {
@@ -62,6 +63,31 @@ void InputMediator::SetupHandlers()
 
     m_handlers[DriverData::GET_SIZE] = [this](std::shared_ptr<DriverData> request) {
         request->m_len = m_storage->GetDataSize(request->m_offset);
+        request->m_status = DriverData::SUCCESS;
+        m_driver->SendReply(request);
+    };
+
+    m_handlers[DriverData::LIST_OFFSETS] = [this](std::shared_ptr<DriverData> request) {
+        auto offsets = m_storage->ListOffsets();
+        request->m_buffer.clear();
+        for (const auto& [offset, size] : offsets)
+        {
+            uint64_t net_offset = htobe64(offset);
+            uint64_t net_size = htobe64(size);
+            char* off_ptr = reinterpret_cast<char*>(&net_offset);
+            char* size_ptr = reinterpret_cast<char*>(&net_size);
+            request->m_buffer.insert(
+                request->m_buffer.end(),
+                off_ptr,
+                off_ptr + sizeof(net_offset)
+            );
+            request->m_buffer.insert(
+                request->m_buffer.end(),
+                size_ptr,
+                size_ptr + sizeof(net_size)
+            );
+        }
+        request->m_len = request->m_buffer.size();
         request->m_status = DriverData::SUCCESS;
         m_driver->SendReply(request);
     };

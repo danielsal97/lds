@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/daniel/lds/design_patterns/reactor/include -I/home/daniel/lds/design_patterns/command/include -I/home/daniel/lds/design_patterns/singleton/include -I/home/daniel/lds/design_patterns/observer/include -I/home/daniel/lds/design_patterns/factory/include -I/home/daniel/lds/services/mediator/include -I/home/daniel/lds/services/communication_protocols/tcp/include -I/home/daniel/lds/services/communication_protocols/nbd/include -I/home/daniel/lds/services/local_storage/include -I/home/daniel/lds/utilities/threading/thread_pool/include -I/home/daniel/lds/utilities/thread_safe_data_structures/priority_queue/include -I/home/daniel/lds/utilities/logger/include -I/home/daniel/lds/plugins/include -I/home/daniel/lds/external/Inotify_cpp -I/home/daniel/lds/external/Inotify_cpp/inotify
 
-CXX_FLAGS = -std=gnu++17
+CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17
 
