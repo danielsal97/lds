@@ -18,13 +18,16 @@ namespace
 
 void PrintUsage(const char* prog)
 {
-    std::cerr << "Usage: " << prog << " <mode> [options]\n\n"
+    std::cerr << "Usage: " << prog << " <mode> <params> <num-minions> [backend] [backend-path]\n\n"
               << "Modes:\n"
-              << "  nbd <nbd-device> <size-bytes> [num-minions]\n"
-              << "    Example: " << prog << " nbd /dev/nbd0 134217728 4\n\n"
-              << "  tcp <port> <size-bytes> [num-minions]\n"
-              << "    Example: " << prog << " tcp 9999 134217728 4\n\n"
-              << "  [num-minions] defaults to hardware_concurrency if not specified\n";
+              << "  nbd <nbd-device> <size-bytes> [num-minions] [backend] [backend-path]\n"
+              << "    Example: " << prog << " nbd /dev/nbd0 134217728 4 memory\n"
+              << "    Example: " << prog << " nbd /dev/nbd0 134217728 4 file ./minion_data\n\n"
+              << "  tcp <port> <size-bytes> [num-minions] [backend] [backend-path]\n"
+              << "    Example: " << prog << " tcp 9999 134217728 4 memory\n"
+              << "    Example: " << prog << " tcp 9999 134217728 4 file ./minion_data\n\n"
+              << "Minion backends: memory (default), file\n"
+              << "num-minions: defaults to hardware_concurrency if not specified\n";
 }
 
 size_t ParseSize(const char* value)
@@ -35,6 +38,16 @@ size_t ParseSize(const char* value)
 int ParsePort(const char* value)
 {
     return std::stoi(value);
+}
+
+MinionBackend ParseBackend(const char* value)
+{
+    std::string backend_str(value);
+    if (backend_str == "memory")
+        return MinionBackend::MEMORY;
+    if (backend_str == "file")
+        return MinionBackend::FILE;
+    throw std::runtime_error("Unknown minion backend: " + backend_str);
 }
 
 template <typename Driver>
@@ -53,9 +66,10 @@ void RunServer(Driver& driver, IStorage& storage)
     reactor.Run();
 }
 
-int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0)
+int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0,
+               MinionBackend backend = MinionBackend::MEMORY, const std::string& backend_path = "")
 {
-    RAIDStorage storage(num_minions, size);
+    RAIDStorage storage(num_minions, size, backend, backend_path);
     NBDDriverComm driver(device, size);
 
     std::cout << "LDS: NBD mode - serving "
@@ -65,9 +79,10 @@ int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0)
     return 0;
 }
 
-int RunTCPMode(int port, size_t size, size_t num_minions = 0)
+int RunTCPMode(int port, size_t size, size_t num_minions = 0,
+               MinionBackend backend = MinionBackend::MEMORY, const std::string& backend_path = "")
 {
-    RAIDStorage storage(num_minions, size);
+    RAIDStorage storage(num_minions, size, backend, backend_path);
     TCPDriverComm driver(port);
 
     std::cout << "LDS: TCP mode - listening on port "
@@ -98,7 +113,9 @@ int DispatchMode(int argc, char* argv[])
         }
 
         size_t num_minions = (argc >= 5) ? ParseSize(argv[4]) : 0;
-        return RunNBDMode(argv[2], ParseSize(argv[3]), num_minions);
+        MinionBackend backend = (argc >= 6) ? ParseBackend(argv[5]) : MinionBackend::MEMORY;
+        std::string backend_path = (argc >= 7) ? argv[6] : "";
+        return RunNBDMode(argv[2], ParseSize(argv[3]), num_minions, backend, backend_path);
     }
 
     if (mode == "tcp")
@@ -110,7 +127,9 @@ int DispatchMode(int argc, char* argv[])
         }
 
         size_t num_minions = (argc >= 5) ? ParseSize(argv[4]) : 0;
-        return RunTCPMode(ParsePort(argv[2]), ParseSize(argv[3]), num_minions);
+        MinionBackend backend = (argc >= 6) ? ParseBackend(argv[5]) : MinionBackend::MEMORY;
+        std::string backend_path = (argc >= 7) ? argv[6] : "";
+        return RunTCPMode(ParsePort(argv[2]), ParseSize(argv[3]), num_minions, backend, backend_path);
     }
 
     PrintUsage(argv[0]);

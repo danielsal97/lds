@@ -13,19 +13,28 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <string>
 #include <shared_mutex>
 
 #include "IStorage.hpp"
-#include "StorageMinion.hpp"
+#include "IStorageMinion.hpp"
 
 namespace hrd41
 {
+
+enum class MinionBackend
+{
+    MEMORY,
+    FILE
+};
 
 class RAIDStorage : public IStorage
 {
 public:
     explicit RAIDStorage(size_t num_minions = 4,
-                         size_t minion_size = 5 * 1024 * 1024);
+                         size_t minion_size = 5 * 1024 * 1024,
+                         MinionBackend backend = MinionBackend::MEMORY,
+                         const std::string& backend_path = "");
 
     RAIDStorage(const RAIDStorage&) = delete;
     RAIDStorage& operator=(const RAIDStorage&) = delete;
@@ -40,14 +49,18 @@ public:
     size_t GetMinionsPerSet() const;
 
 private:
-    std::vector<std::unique_ptr<StorageMinion>> m_minions;
+    std::vector<std::unique_ptr<IStorageMinion>> m_minions;
 
     size_t m_stripe_size;
     size_t m_num_primary;
     size_t m_minion_size;
+    std::string m_backend_path;
 
     std::map<size_t, size_t> m_offset_sizes;
     mutable std::shared_mutex m_offsets_lock;
+
+    void SaveMetadata() const;
+    void LoadMetadata();
 
     size_t PrimaryIndex(size_t offset) const;
     size_t MirrorIndex(size_t primary_idx) const;
