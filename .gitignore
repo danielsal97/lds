@@ -1,47 +1,42 @@
+# Build system
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+bear_output.json
+
 # Build artifacts
 build/
 debug/
-lib/
-bin/
 *.o
-*.so
 *.a
-CMakeFiles/
-Makefile
-cmake_install.cmake
+*.so
 
-# Binaries
-buse
+# Executables (keep source, not binaries)
 lds_app
+lds_watchdog
 test_reactor
 
 # Logs
-log.txt
 *.log
-test_*.log
+log*.txt
 
-# macOS
-.DS_Store
-
-# IDE
-.vscode/
-.obsidian/
-.cache/
-compile_commands.json
-
-# Claude settings
-.claude/settings.local.json
-
-# Documentation
-docs/
-*.md
-!README.md
-*.html
-*.txt
-
-# Test files and client tools
-test_client.py
-test_persistence.sh
-connect_minions_to_nbd.sh
-clients.json
+# Runtime data
+minion_data/
 .tcp_allocations
+clients.json
+
+# IDE and editor
+.claude/
+.obsidian/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db

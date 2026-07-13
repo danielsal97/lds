@@ -12,6 +12,7 @@
 #include "reactor.hpp"
 #include "thread_pool.hpp"
 #include "pnp.hpp"
+#include "WatchdogMonitor.hpp"
 
 using namespace hrd41;
 
@@ -53,12 +54,15 @@ MinionBackend ParseBackend(const char* value)
 }
 
 template <typename Driver>
-void RunServer(Driver& driver, IStorage& storage)
+void RunServer(Driver& driver, IStorage& storage, int argc, char* argv[])
 {
     ThreadPool pool;
     Reactor reactor;
     InputMediator mediator(&driver, &storage, &pool, &reactor);
     PNP pnp("plugins/");
+
+    // Start watchdog monitor - if watchdog crashes, restart it
+    WatchdogMonitor::StartMonitoring(argc, argv);
 
     reactor.Add(driver.GetFD());
     reactor.SetHandler([&mediator](int fd) {
@@ -66,9 +70,10 @@ void RunServer(Driver& driver, IStorage& storage)
     });
 
     reactor.Run();
+    WatchdogMonitor::StopMonitoring();
 }
 
-int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0,
+int RunNBDMode(int argc, char* argv[], const std::string& device, size_t size, size_t num_minions = 0,
                MinionBackend backend = MinionBackend::MEMORY, const std::string& backend_path = "")
 {
     // Use factories to create minions and metadata store
@@ -81,11 +86,11 @@ int RunNBDMode(const std::string& device, size_t size, size_t num_minions = 0,
     std::cout << "LDS: NBD mode - serving "
               << size << " bytes on " << device << '\n';
 
-    RunServer(driver, storage);
+    RunServer(driver, storage, argc, argv);
     return 0;
 }
 
-int RunTCPMode(int port, size_t size, size_t num_minions = 0,
+int RunTCPMode(int argc, char* argv[], int port, size_t size, size_t num_minions = 0,
                MinionBackend backend = MinionBackend::MEMORY, const std::string& backend_path = "")
 {
     // Use factories to create minions and metadata store
@@ -100,7 +105,7 @@ int RunTCPMode(int port, size_t size, size_t num_minions = 0,
 
     std::cout << "LDS: Waiting for client connection...\n";
 
-    RunServer(driver, storage);
+    RunServer(driver, storage, argc, argv);
     return 0;
 }
 
@@ -133,7 +138,7 @@ int DispatchMode(int argc, char* argv[])
 
         MinionBackend backend = (argc >= 6) ? ParseBackend(argv[5]) : MinionBackend::MEMORY;
         std::string backend_path = (argc >= 7) ? argv[6] : "";
-        return RunNBDMode(argv[2], ParseSize(argv[3]), num_minions, backend, backend_path);
+        return RunNBDMode(argc, argv, argv[2], ParseSize(argv[3]), num_minions, backend, backend_path);
     }
 
     if (mode == "tcp")
@@ -155,7 +160,7 @@ int DispatchMode(int argc, char* argv[])
 
         MinionBackend backend = (argc >= 6) ? ParseBackend(argv[5]) : MinionBackend::MEMORY;
         std::string backend_path = (argc >= 7) ? argv[6] : "";
-        return RunTCPMode(ParsePort(argv[2]), ParseSize(argv[3]), num_minions, backend, backend_path);
+        return RunTCPMode(argc, argv, ParsePort(argv[2]), ParseSize(argv[3]), num_minions, backend, backend_path);
     }
 
     PrintUsage(argv[0]);
