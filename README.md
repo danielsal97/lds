@@ -496,15 +496,12 @@ WRITE commands execute first (metadata consistency), then READ, then FLUSH. Prio
 
 ### Planned
 
-- [ ] **Phase 2C** — Network-based minion transport
+- [ ] **Phase 2** — Network-based minion transport
   - [ ] RemoteStorageMinion abstraction for network backends
   - [ ] TCP-based remote minion protocol
   - [ ] RDMA support (if demand exists)
 
-- [ ] **Phase 3** — Distributed RAID controller
-  - [ ] Minion daemon exposing IStorageMinion interface
-  - [ ] Gossip-based minion discovery
-  - [ ] Consensus-based failover and mirror promotion
+
 
 ### Exploratory (Research, not committed)
 
