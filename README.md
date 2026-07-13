@@ -345,21 +345,26 @@ lds/
 │   ├── observer/           # Dispatcher + CallBack templates
 │   ├── factory/            # Plugin/command factory
 │   ├── command/            # ICommand interface
-│   └── singleton/          # Thread-safe singleton
+│   ├── singleton/          # Thread-safe singleton
+│   └── watchdog_thread/    # Watchdog thread pattern (legacy)
 ├── services/
 │   ├── communication_protocols/
 │   │   ├── nbd/            # NBD kernel driver interface
 │   │   └── tcp/            # TCP server (IDriverComm drop-in)
-│   ├── local_storage/      # In-memory block storage
-│   └── mediator/           # InputMediator — routes events to storage
+│   ├── local_storage/      # In-memory + file-backed RAID01 storage
+│   ├── mediator/           # InputMediator — routes events to storage
+│   └── watchdog_monitor/   # Bidirectional process monitoring (auto-restart)
 ├── plugins/                # DirMonitor (inotify) + PNP + soLoader
 ├── utilities/
 │   ├── logger/             # Thread-safe logger
 │   └── threading/          # ThreadPool + WPQ (priority work queue)
 ├── test/
 │   ├── unit/               # Unit tests (one binary per component)
-│   └── integration/        # test_tcp_client.py — end-to-end TCP test
-└── external/               # inotify C++ wrapper
+│   └── integration/        # Integration tests
+├── external/               # inotify C++ wrapper
+├── docs/                   # Documentation (bottleneck analysis, optimization roadmap)
+├── client.py               # TCP client test harness with auto-reconnect
+└── CMakeLists.txt          # Build configuration
 ```
 
 ---
